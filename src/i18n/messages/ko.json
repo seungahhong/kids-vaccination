@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "아기 예방접종 일정",
+    "home": "홈",
+    "schedule": "접종 일정",
+    "settings": "설정",
+    "disclaimer": "이 정보는 참고용이며, 정확한 내용은 소아과 의사와 상담하세요."
+  },
+  "home": {
+    "title": "아기 예방접종\n일정 관리",
+    "subtitle": "아기의 생년월일을 입력하면\n맞춤 예방접종 일정을 확인할 수 있어요",
+    "year": "년",
+    "month": "월",
+    "day": "일",
+    "selectYear": "연도 선택",
+    "selectMonth": "월 선택",
+    "selectDay": "일 선택",
+    "submit": "일정 확인하기",
+    "existingBirthdate": "이전에 입력한 생년월일이 있어요",
+    "goToSchedule": "일정 바로 보기",
+    "birthdateLabel": "생년월일",
+    "selectBirthdate": "생년월일 선택",
+    "pickerConfirm": "확인",
+    "pickerCancel": "취소"
+  },
+  "schedule": {
+    "title": "예방접종 일정",
+    "birthdate": "생년월일",
+    "filterAll": "전체",
+    "filterUpcoming": "예정",
+    "filterPast": "지남",
+    "upcoming": "예정",
+    "past": "지남",
+    "soon": "곧 접종",
+    "detail": "상세 정보",
+    "sideEffects": "부작용",
+    "notes": "참고사항",
+    "noBirthdate": "생년월일을 먼저 입력해주세요",
+    "goHome": "홈으로 이동",
+    "filterLabel": "접종 상태 필터",
+    "pastSection": "지난 접종",
+    "national": "필수",
+    "optional": "선택"
+  },
+  "settings": {
+    "title": "설정",
+    "theme": "테마",
+    "darkMode": "다크모드",
+    "language": "언어",
+    "babyInfo": "아기 정보",
+    "birthdate": "생년월일",
+    "edit": "수정",
+    "reset": "생년월일 삭제",
+    "resetConfirm": "아기 생년월일 정보를 삭제할까요?",
+    "resetDone": "초기화 완료",
+    "cancel": "취소",
+    "confirm": "확인",
+    "themeSystem": "시스템",
+    "themeLight": "라이트",
+    "themeDark": "다크"
+  }
+}

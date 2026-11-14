@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "Baby Vaccination Schedule",
+    "home": "Home",
+    "schedule": "Schedule",
+    "settings": "Settings",
+    "disclaimer": "This information is for reference only. Please consult a pediatrician for accurate medical advice."
+  },
+  "home": {
+    "title": "Baby Vaccination\nSchedule Manager",
+    "subtitle": "Enter your baby's date of birth\nto see the personalized vaccination schedule",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "selectYear": "Select year",
+    "selectMonth": "Select month",
+    "selectDay": "Select day",
+    "submit": "View Schedule",
+    "existingBirthdate": "You've previously entered a birthdate",
+    "goToSchedule": "Go to Schedule",
+    "birthdateLabel": "Date of birth",
+    "selectBirthdate": "Select date of birth",
+    "pickerConfirm": "Done",
+    "pickerCancel": "Cancel"
+  },
+  "schedule": {
+    "title": "Vaccination Schedule",
+    "birthdate": "Date of Birth",
+    "filterAll": "All",
+    "filterUpcoming": "Upcoming",
+    "filterPast": "Past",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "soon": "Coming Soon",
+    "detail": "Details",
+    "sideEffects": "Side Effects",
+    "notes": "Notes",
+    "noBirthdate": "Please enter a birthdate first",
+    "goHome": "Go to Home",
+    "filterLabel": "Vaccination status filter",
+    "pastSection": "Past vaccinations",
+    "national": "Required",
+    "optional": "Optional"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "language": "Language",
+    "babyInfo": "Baby Info",
+    "birthdate": "Date of Birth",
+    "edit": "Edit",
+    "reset": "Delete Birthdate",
+    "resetConfirm": "Delete your baby's birthdate?",
+    "resetDone": "Reset complete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark"
+  }
+}

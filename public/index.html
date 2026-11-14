@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>아기 예방접종 일정</title>
+    <meta
+      name="description"
+      content="아기의 생년월일을 입력하면 질병관리청 표준 예방접종 일정과 학회 권장 선택접종을 기준으로 14종 백신 41회차의 접종 시기를 자동으로 계산해 드립니다. 입력한 정보는 기기에만 저장됩니다."
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#fafaf9"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#1c1917"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="아기 예방접종 일정" />
+    <meta
+      property="og:description"
+      content="아기 생년월일만 입력하면 질병관리청·학회 기준 14종 백신 41회차 맞춤 예방접종 일정을 확인할 수 있어요."
+    />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "아기 예방접종 일정",
+        "alternateName": [
+          "Baby Vaccination Schedule",
+          "赤ちゃん予防接種スケジュール",
+          "宝宝疫苗接种日程"
+        ],
+        "description": "아기의 생년월일을 입력하면 질병관리청 표준 예방접종 일정과 학회 권장 선택접종을 기준으로 14종 백신 41회차의 접종 시기를 자동으로 계산해 주는 앱입니다. 입력한 정보는 기기에만 저장되며 외부 서버로 보내지 않습니다.",
+        "inLanguage": ["ko", "en", "ja", "zh"],
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "iOS, Android, Web",
+        "browserRequirements": "JavaScript를 지원하는 최신 브라우저",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" },
+        "audience": {
+          "@type": "Audience",
+          "audienceType": "영유아 부모·보호자"
+        },
+        "featureList": [
+          "생년월일 기반 14종 백신 41회차 접종 일정 자동 계산",
+          "월령별 타임라인과 예정·곧 접종·지남 상태 표시",
+          "백신별 대상 질병·부작용·참고사항 안내",
+          "한국어·영어·일본어·중국어 지원",
+          "입력 정보는 기기에만 저장(서버 전송 없음)"
+        ],
+        "isBasedOn": {
+          "@type": "WebSite",
+          "name": "질병관리청 예방접종도우미",
+          "url": "https://nip.kdca.go.kr",
+          "publisher": {
+            "@type": "GovernmentOrganization",
+            "name": "질병관리청",
+            "alternateName": "Korea Disease Control and Prevention Agency"
+          }
+        },
+        "usageInfo": {
+          "@type": "CreativeWork",
+          "name": "의료 면책 고지",
+          "text": "이 정보는 참고용이며, 정확한 내용은 소아과 의사와 상담하세요."
+        }
+      }
+    </script>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <noscript>
+      <style>
+        body {
+          overflow: auto;
+        }
+        #root {
+          display: none;
+        }
+      </style>
+    </noscript>
+  </head>
+
+  <body>
+    <noscript>
+      <h1>아기 예방접종 일정</h1>
+      <p>
+        아기 생년월일을 입력하면 질병관리청 표준 예방접종 일정을 바탕으로
+        BCG·B형간염·DTaP·MMR 등 14종 백신 41회차의 접종 시기를 계산해 주는
+        앱입니다. 일정은 월령별로 묶여 예정·곧 접종·지남 상태로 표시되고,
+        한국어·영어·일본어·중국어를 지원합니다. 입력한 생년월일은 기기에만
+        저장되며 외부 서버로 보내지 않습니다.
+      </p>
+      <p>이 정보는 참고용이며, 정확한 내용은 소아과 의사와 상담하세요.</p>
+      <p>앱을 사용하려면 브라우저에서 JavaScript를 켜 주세요.</p>
+    </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  </body>
+</html>

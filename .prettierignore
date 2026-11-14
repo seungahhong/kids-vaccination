@@ -1,0 +1,14 @@
+# 계약 문서(PRD·설계서·비평). format이 고쳐 쓰지 않도록 제외한다(PRD §4 P1, 비평 C-03)
+.claude
+
+# 생성물
+dist
+.expo
+coverage
+playwright-report
+test-results
+package-lock.json
+expo-env.d.ts
+
+# 원본 바이트 동일 유지(PRD P3)
+src/data/vaccinations.json

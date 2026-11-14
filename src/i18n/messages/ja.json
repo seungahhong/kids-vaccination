@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "赤ちゃん予防接種スケジュール",
+    "home": "ホーム",
+    "schedule": "接種日程",
+    "settings": "設定",
+    "disclaimer": "この情報は参考用です。正確な内容は小児科医にご相談ください。"
+  },
+  "home": {
+    "title": "赤ちゃん予防接種\nスケジュール管理",
+    "subtitle": "赤ちゃんの生年月日を入力すると\nカスタマイズされた予防接種日程を確認できます",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "selectYear": "年を選択",
+    "selectMonth": "月を選択",
+    "selectDay": "日を選択",
+    "submit": "日程を確認する",
+    "existingBirthdate": "以前入力した生年月日があります",
+    "goToSchedule": "日程を見る",
+    "birthdateLabel": "生年月日",
+    "selectBirthdate": "生年月日を選択",
+    "pickerConfirm": "完了",
+    "pickerCancel": "キャンセル"
+  },
+  "schedule": {
+    "title": "予防接種日程",
+    "birthdate": "生年月日",
+    "filterAll": "全て",
+    "filterUpcoming": "予定",
+    "filterPast": "過去",
+    "upcoming": "予定",
+    "past": "過去",
+    "soon": "もうすぐ",
+    "detail": "詳細情報",
+    "sideEffects": "副反応",
+    "notes": "備考",
+    "noBirthdate": "まず生年月日を入力してください",
+    "goHome": "ホームへ",
+    "filterLabel": "接種状況フィルター",
+    "pastSection": "過去の接種",
+    "national": "定期",
+    "optional": "任意"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": "テーマ",
+    "darkMode": "ダークモード",
+    "language": "言語",
+    "babyInfo": "赤ちゃん情報",
+    "birthdate": "生年月日",
+    "edit": "編集",
+    "reset": "生年月日を削除",
+    "resetConfirm": "赤ちゃんの生年月日を削除しますか？",
+    "resetDone": "初期化完了",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "themeSystem": "システム",
+    "themeLight": "ライト",
+    "themeDark": "ダーク"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "宝宝疫苗接种日程",
+    "home": "首页",
+    "schedule": "接种日程",
+    "settings": "设置",
+    "disclaimer": "此信息仅供参考，准确内容请咨询儿科医生。"
+  },
+  "home": {
+    "title": "宝宝疫苗接种\n日程管理",
+    "subtitle": "输入宝宝的出生日期\n即可查看个性化疫苗接种日程",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "selectYear": "选择年份",
+    "selectMonth": "选择月份",
+    "selectDay": "选择日期",
+    "submit": "查看日程",
+    "existingBirthdate": "您之前已输入过出生日期",
+    "goToSchedule": "查看接种日程",
+    "birthdateLabel": "出生日期",
+    "selectBirthdate": "选择出生日期",
+    "pickerConfirm": "确定",
+    "pickerCancel": "取消"
+  },
+  "schedule": {
+    "title": "疫苗接种日程",
+    "birthdate": "出生日期",
+    "filterAll": "全部",
+    "filterUpcoming": "即将",
+    "filterPast": "已过",
+    "upcoming": "即将",
+    "past": "已过",
+    "soon": "即将接种",
+    "detail": "详细信息",
+    "sideEffects": "副作用",
+    "notes": "备注",
+    "noBirthdate": "请先输入出生日期",
+    "goHome": "返回首页",
+    "filterLabel": "接种状态筛选",
+    "pastSection": "已过接种",
+    "national": "必需",
+    "optional": "可选"
+  },
+  "settings": {
+    "title": "设置",
+    "theme": "主题",
+    "darkMode": "深色模式",
+    "language": "语言",
+    "babyInfo": "宝宝信息",
+    "birthdate": "出生日期",
+    "edit": "编辑",
+    "reset": "删除出生日期",
+    "resetConfirm": "要删除宝宝的出生日期吗？",
+    "resetDone": "重置完成",
+    "cancel": "取消",
+    "confirm": "确认",
+    "themeSystem": "跟随系统",
+    "themeLight": "浅色",
+    "themeDark": "深色"
+  }
+}

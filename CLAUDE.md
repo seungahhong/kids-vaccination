@@ -1,0 +1,121 @@
+# CLAUDE.md
+
+이 저장소에서 일하는 Claude를 위한 안내다. 사람용 소개·설치·기능 설명은 [README.md](README.md)에 있다. 여기에는 코드만 읽어서는 알기 어려운 규칙과 **그 규칙이 있는 이유**를 적는다. 규칙 대부분은 ESLint나 테스트가 강제하므로, 막히면 우회하지 말고 이유를 읽은 뒤 허용된 길을 쓴다.
+
+## 프로젝트 한눈에
+
+아기 생년월일로 한국 예방접종 일정(현재 14종 41회차)을 계산해 보여 주는 Expo SDK 58 앱이다. 주 대상은 iOS·Android이고 웹 빌드는 E2E 검증에 쓴다. Next.js 웹앱에서 AI 상담을 뺀 기능을 옮긴 이식판이라 AI·네트워크 코드는 의도적으로 없다. 모든 값은 기기(AsyncStorage)에만 저장한다.
+
+## 명령을 돌리기 전에
+
+- **Node 24로 실행한다.** `package.json`의 `engines`가 `>=24.3 <25`이고 Expo SDK 58은 Node 25를 지원하지 않는다. 기본 개발 머신의 `node`는 25라서 npm·npx 명령마다 앞에 `export PATH="$HOME/.local/node-v24/bin:$PATH" &&`를 붙인다(셸 상태가 다음 명령으로 이어지지 않는다). 다른 머신이면 `nvm use`(`.nvmrc` = 24.22.0).
+- 패키지 매니저는 npm이다. Expo 관리 패키지는 `npx expo install`로 SDK에 맞는 버전을 받는다.
+
+## 명령
+
+| 목적        | 명령                 | 메모                                                                                                   |
+| ----------- | -------------------- | ------------------------------------------------------------------------------------------------------ |
+| 완료 판정   | `npm run verify`     | typecheck → lint(경고 0) → format:check → test:ci → export:web. 변경을 마쳤다고 말하기 전에 통과시킨다 |
+| 단위 테스트 | `npm test -- <경로>` | `TZ=Asia/Seoul`이 고정된다. 맨 `npx jest`는 TZ 확인 테스트가 일부러 실패한다                           |
+| 두 시간대   | `npm run test:ci`    | 서울(커버리지 포함) + 뉴욕. 날짜를 다루는 코드를 고쳤으면 이것까지 돌린다                              |
+| E2E         | `npm run e2e`        | 8081에 Expo 웹 서버를 띄우고 Playwright를 돌린다. 다른 E2E 실행과 겹치지 않게 혼자 돌린다              |
+| 타입        | `npm run typecheck`  | `expo customize tsconfig.json`으로 typed routes 타입을 만든 뒤 `tsc --noEmit`                          |
+| 서식        | `npm run format`     | Prettier. `.md`도 대상이라 문서를 고쳐도 `format:check`에 걸린다                                       |
+
+`npm run e2e`는 `CI=1`이라 이미 떠 있는 서버를 재사용하지 않는다. 사용자가 직접 띄운 `expo start`가 8081을 쓰고 있으면 그 프로세스를 끄지 말고 `env -u CI npx playwright test`로 그 서버를 재사용한다.
+
+## 구조와 의존 방향
+
+```
+app/                      Expo Router 라우트. _layout.tsx = Provider 트리 + LoadingGate, (tabs)/ = 홈·일정·설정
+src/components/           화면 부품 (home · schedule · settings · common)
+src/contexts/             Theme · I18n · Birthdate Context
+src/hooks/                usePersistentState · useToday · 플랫폼 분기 훅
+src/lib/                  순수 로직: date · schedule · format · locale · themePreference · vaccinationData · storage
+src/theme/  src/i18n/     토큰·대비 계산 / 번역 카탈로그(ko.json 기준)
+src/types/  src/data/     도메인 타입 / vaccinations.json
+src/mocks/  test-utils/   jest 수동 mock / jest 렌더 헬퍼
+e2e/                      Playwright 스펙과 fixture
+```
+
+의존은 `app → components → contexts → hooks → lib·theme·i18n → types·data` 한 방향이다. 순수 레이어(`src/lib`·`src/theme`·`src/i18n`)는 React·RN·expo를 import하지 않는다. 예외는 AsyncStorage를 감싸는 `src/lib/storage.ts` 하나다. 이 경계 덕분에 일정 계산을 RN 없이 빠르게 테스트하고 `src/lib` 커버리지 임계 95%(실제 100%)를 지킨다.
+
+## 코드 규칙과 이유
+
+- **날짜 문자열을 `new Date(str)`·`Date.parse`로 파싱하지 않는다.** `'YYYY-MM-DD'`는 UTC로 파싱되어 미국 시간대에서 하루가 밀린다(원본 앱의 실제 결함). `src/lib/date.ts`의 `parseIsoDate`·`isoDateToDate`·`startOfDay`를 쓴다. 월 덧셈은 `addMonthsClamped`(1/31 + 1개월 = 2/29, `setMonth`는 3/2로 넘침), 일 덧셈은 ms가 아니라 `addDays`(DST 전환일 보호). ESLint가 인자 1개짜리 `new Date(x)`를 막는다.
+- **"오늘"은 주입받는다.** `src/lib`은 `new Date()`를 부르지 않고 `now`를 인자로 받는다. 화면은 `useToday()`(ClockContext)를 쓰고 `useMemo` 의존성에는 Date 객체 대신 `toIsoDate(today)` 문자열을 둔다. 그래야 테스트·E2E가 시계를 고정할 수 있고, 같은 날에는 일정을 다시 계산하지 않는다.
+- **날짜 표시는 `src/lib/format.ts`만 쓴다.** `toLocaleDateString`·`Intl`은 Hermes·브라우저마다 ICU 결과가 달라 4개 언어 표기를 고정할 수 없다. ESLint는 `toLocaleDateString`만 막고 `Intl`은 막지 않으므로 `Intl`은 스스로 피한다.
+- **화면은 AsyncStorage를 직접 만지지 않는다.** Context setter(`setBirthdate`·`setLocale`·`setPreference`)만 쓴다. 저장값은 JSON이 아닌 원시 문자열이고 codec을 거친다. 손상된 값은 "없음"으로 읽고 덮어쓰지 않는다.
+- **색 hex는 `src/theme/tokens.ts`에만 둔다.** 컴포넌트는 `useTheme().tokens`에서 색을 가져오고, `StyleSheet`에는 레이아웃만 둔다. 텍스트/배경 조합은 `CONTRAST_PAIRS`에 등록된 것만 쓴다. 테스트가 두 테마 모두에서 등록 쌍의 대비 ≥ 4.5:1을 확인하기 때문이다. 새 조합이 필요하면 쌍을 등록하고 대비 테스트를 통과시킨다.
+- **접근성은 `role` + `aria-*` props로 표현한다.** `accessibilityRole`·`accessibilityState`는 ESLint 오류다. react-native-web 0.21이 `accessibilityState`를 DOM에 반영하지 않아 웹 E2E와 보조기기가 상태를 읽지 못한다. 화면 제목은 `role="heading"`(웹 `<h1>`), 섹션 제목은 `aria-level={2}`이다.
+- **`Alert`·`fetch`·`XMLHttpRequest`는 쓰지 않는다.** 확인은 앱 안 UI로 한다(웹에서 `Alert`이 동작하지 않음). 앱은 네트워크 요청 0건이 요구사항이고 `src/__test__/no-ai.test.ts`·`e2e/no-ai.spec.ts`가 지킨다.
+- **타입 우회 금지:** `any`, `@ts-ignore`·`@ts-nocheck`·`@ts-expect-error`(타입 테스트 `src/types/__test__/` 제외), `as unknown as`. `IsoDate`는 브랜드 타입이라 `date.ts`의 함수로만 만든다.
+- **플랫폼 분기는 파일 세 개로 한다:** `X.types.ts`(공통 계약) + `X.ts(x)`(네이티브) + `X.web.ts(x)`(웹). Metro가 웹 번들에서 `.web`을 고르고, 두 구현이 같은 타입을 따르므로 tsc가 둘 다 검사한다. 커버리지에서는 `.web.tsx`(컴포넌트)만 빠지고 E2E가 검증한다. `.web.ts`(훅)는 커버리지 대상이라 jest 테스트가 필요하다.
+- **탭 화면은 언마운트되지 않는다.** 생년월일이 바뀔 때 화면 state를 처음으로 돌리려면 effect 대신 `key`를 바꾼다(`HomeForm`·`ScheduleBody` 참고). 웹에서는 떠난 탭이 DOM에 남으므로 `useBlurInert`가 `inert`를 붙인다.
+- **네이티브 화면 낭독기 포커스 이동은 대상의 `onLayout`에서 한다.** `useEffect` 시점에는 새 네이티브 뷰가 아직 없어 이동이 조용히 실패한다(Android 에뮬레이터에서 확인한 결함 V-01). 테스트는 `test-utils/render.tsx`의 `fireLayout`으로 그 시점을 연다.
+
+## 테스트 작성
+
+- **위치:** 대상 파일 옆 `__test__/`(단수형)에 둔다. 라우트 화면 테스트는 `app/(tabs)/__test__/`에 둔다. Expo Router는 `app/` 아래 파일을 모두 라우트로 번들하므로 `metro.config.js`가 `__test__/`를 blockList로 막는다. 그래서 `app/`에서 `__test__/` 밖에 둔 `*.test.*` 파일은 실제 라우트가 되어 `expo export`를 깨뜨린다. 수동 mock은 `src/mocks/`에 두고 `jest.setup.ts`에서 연결한다. `public/`에는 테스트를 두지 않는다(`dist`로 그대로 복사됨). `test-utils/__test__/test-layout.test.ts`가 이 규칙을 검사한다.
+- **RNTL 14는 비동기다.** `render`·`fireEvent`·`act`·`renderHook`·`rerender`를 모두 `await`한다.
+- **렌더 헬퍼(`test-utils/render.tsx`):** 컴포넌트는 `renderWithProviders(ui, { now })`, 라우트는 `renderApp({ initialUrl, now })`로 렌더한다. 기본 시각은 `FIXED_NOW`(로컬 2026-10-18 15:00)이다. `renderApp`은 fake timer를 켜므로 그 뒤에는 `flushMacrotask` 대신 `flushRouterMacrotask`를 쓴다. 저장값은 `seedStorage`로 넣고(`setItem` 호출 횟수 단언을 오염시키지 않음), 하이드레이션 경합은 `deferStorage`로 재현한다.
+- **mock 복원은 `jest.setup.ts`가 한다.** `resetMocks`·`restoreMocks`를 jest 설정에 켜지 않는다. Jest 30에서는 이 옵션이 수동 mock 구현까지 지운다.
+- **날짜 단언**은 `toIsoDate(d) === "YYYY-MM-DD"`처럼 문자열로 비교하고, 서울·뉴욕 두 시간대에서 모두 통과해야 한다.
+- **E2E:** `test`는 `e2e/fixtures.ts`에서 import한다. 이 fixture가 시계(2026-10-18 10:00 KST)를 고정하고, `seed`(localStorage 1회 주입)와 `screenOf`를 준다. 떠난 탭 화면이 DOM에 남으므로 testID·텍스트 조회는 `screenOf("schedule")` 안으로 한정한다. 인수조건을 판정하는 테스트는 제목을 AC ID로 시작한다(`"AC-6.1 …"`). 충족률은 `test-results/e2e.json`을 이 접두어로 집계한다. 보조 테스트는 `G-6`·`R1-04`·`SEO` 같은 다른 접두어를 쓴다.
+
+## 자주 하는 변경
+
+**접종 데이터(`src/data/vaccinations.json`)를 고칠 때**
+
+1. 4개 언어(ko·en·ja·zh) 텍스트를 모두 채운다. 모듈이 로드될 때 `loadVaccinations`가 구조를 검증하고, 실패하면 앱이 시작되지 않는다. 이 파일은 `.prettierignore` 대상이므로 서식을 직접 맞춘다.
+2. `doseNumber`는 백신 안에서 유일해야 한다. 일정 id·React key·testID가 모두 `${id}-${doseNumber}`이기 때문이다. 회차만 분류가 다르면 dose에 `category`를 둔다.
+3. 시작일이 같은 회차는 JSON 배열 순서대로 정렬된다(`generateSchedule`의 2단 키). 새 백신을 어디에 넣느냐에 따라 같은 월령 그룹 안의 카드 순서가 정해진다.
+4. 수치가 바뀌는 단언은 목록으로 외우지 말고 검색해서 찾는다. 테스트들은 고정 시각(2026-10-18)과 생년월일 2026-04-30·2024-01-15 같은 픽스처로 다음 값을 단언한다.
+   - 총 카드 수와 종 수
+   - 상태별 개수(지남/곧 접종/예정)
+   - 월령 그룹 헤더와 그룹별 카드 수 배열
+   - 필수/선택 배지 개수
+   - 필터별 카드 수
+
+   먼저 `npm run test:ci`와 `npm run e2e`를 돌려 실패하는 단언을 따라가며 기대값을 새 데이터로 다시 계산한다. 단언을 고쳐도 테스트 **제목** 속 수치("카드 41개", "13·8·20")는 옛 값으로 남는다. 그래서 옛 총계를 숫자 경계로 검색해 마저 고친다. 예: `grep -rnE "(^|[^0-9.-])41([^0-9]|$)|14종" app src e2e public README.md`
+   - `public/index.html`의 "N종·N회차" 문구는 `src/__test__/html-template.test.ts`가 JSON과 대조하므로 테스트 실패로 드러난다.
+
+5. 인플루엔자 지원 연령과 HPV 남아 대상 출생 연도는 해마다 바뀐다. 출처는 질병관리청 국가예방접종 지침과 대한소아과학회 권장 일정이다.
+
+**상태 판정 기준을 바꿀 때:** "곧 접종" 창은 `src/lib/schedule.ts`의 `SOON_WINDOW_DAYS`(30)다. JSDoc과 README에도 같은 수치가 적혀 있다. `AC-5.2` 테스트는 고정 시각 + 30일이 뉴욕 DST 종료일(2026-11-01)을 지나는 경계를 검증한다. 창을 줄이면 이 테스트가 더는 DST를 거치지 않으므로, 그 테스트의 `now`를 다시 고른다.
+
+**번역 키를 더할 때:** `src/i18n/messages/ko.json`이 기준 카탈로그다. 4개 파일에 같은 키를 넣는다. 빠진 키는 `satisfies Catalogs`가 컴파일 오류로 잡고, 남는 키는 `src/i18n/__test__/messages.test.ts`의 키 집합 단언이 잡는다. 그래서 키를 더하면 그 테스트의 기대 키 목록과 개수도 함께 고친다.
+
+**UI를 바꿀 때:** 터치 영역 44×44 이상, 렌더 대비, heading 구조를 E2E(`e2e/a11y.spec.ts`, `review-r*-a11y.spec.ts`)가 검사한다. 단위 테스트만 보고 끝내지 말고 `npm run e2e`도 돌린다. 화면 구조도 테스트에 고정되어 있다. 예를 들어 설정 화면은 다음 값을 단언한다.
+
+- heading 개수(`app/(tabs)/__test__/settings.test.tsx`)
+- level-2 섹션 제목 목록(`e2e/review-r1-a11y.spec.ts`)
+
+그래서 섹션을 더하거나 빼면 이 기대값도 함께 고친다.
+
+**새 expo·네이티브 모듈을 쓸 때:** `src/lib`·`src/theme`·`src/i18n`에서는 import할 수 없으므로 hooks·contexts·components 쪽에서 쓴다. jest 프리셋의 기본 mock이 모자라면 `src/mocks/<패키지 이름>`에 수동 mock을 두고 `jest.setup.ts`에서 `jest.mock`으로 연결한다.
+
+## 주석의 ID와 참고 문서
+
+주석의 ID는 아래 계약 문서의 항목을 가리킨다.
+
+| ID                     | 뜻                                    |
+| ---------------------- | ------------------------------------- |
+| `FR-n`·`US-n`·`AC-n.m` | PRD의 요구사항·사용자 스토리·인수조건 |
+| `U-n`                  | 사용자 결정                           |
+| `R1-03`                | 리뷰 라운드별 지적                    |
+| `V-01`                 | 에뮬레이터에서 찾은 결함              |
+| `G-n`                  | NFR 게이트                            |
+| `설계서 §n`            | 설계서의 해당 절                      |
+
+문서 위치:
+
+- `.claude/plans/`: PRD `kids-vaccination-prd.md` v1.3, 설계서 `kids-vaccination-architecture.md`
+- `.claude/reports/`: 최종 리포트, 에뮬레이터 증적
+
+두 폴더는 gitignore 대상이라 원래 개발 머신에만 있다. 문서가 없으면 각 파일 머리 주석에 같은 맥락이 요약되어 있다.
+
+문서가 있으면 PRD §2.3(인수조건), §8.4(사용자 결정), 부록 E(개발 이후 변경 기록)부터 본다. 읽을 때 두 가지에 주의한다.
+
+- AC 본문의 수치(카드 35개 등)는 v1.3 이전 값이다. 현재 기대값은 부록 E.8 표가 우선한다.
+- 문서에는 예전 경로 `__tests__`가 남아 있다. 경로와 구조는 현재 코드를 기준으로 판단한다.

@@ -1,0 +1,1104 @@
+{
+  "vaccinations": [
+    {
+      "id": "bcg",
+      "name": {
+        "ko": "BCG(피내용)",
+        "en": "BCG (Intradermal)",
+        "ja": "BCG（皮内用）",
+        "zh": "BCG（皮内注射）"
+      },
+      "disease": {
+        "ko": "결핵",
+        "en": "Tuberculosis",
+        "ja": "結核",
+        "zh": "结核病"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 0,
+            "maxMonths": 1,
+            "label": {
+              "ko": "생후 4주 이내",
+              "en": "Within 4 weeks of birth",
+              "ja": "生後4週以内",
+              "zh": "出生后4周内"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "결핵을 예방하는 백신으로, 출생 후 4주 이내에 접종합니다.",
+        "en": "A vaccine to prevent tuberculosis, administered within 4 weeks of birth.",
+        "ja": "結核を予防するワクチンで、出生後4週間以内に接種します。",
+        "zh": "预防结核病的疫苗，在出生后4周内接种。"
+      },
+      "detailedDescription": {
+        "ko": "BCG(Bacillus Calmette-Guérin) 백신은 결핵균에 대한 면역력을 형성합니다. 피내용 BCG 백신을 왼쪽 팔 삼각근 부위에 접종합니다. 접종 후 2~3주 후에 접종 부위에 작은 궤양이 생길 수 있으며, 이는 정상적인 반응입니다.",
+        "en": "The BCG (Bacillus Calmette-Guérin) vaccine builds immunity against tuberculosis bacteria. The intradermal BCG vaccine is administered in the left deltoid area. A small ulcer may form at the injection site 2-3 weeks after vaccination, which is a normal reaction.",
+        "ja": "BCG（Bacillus Calmette-Guérin）ワクチンは、結核菌に対する免疫力を形成します。皮内用BCGワクチンを左腕の三角筋部位に接種します。接種後2〜3週間後に接種部位に小さな潰瘍ができることがありますが、これは正常な反応です。",
+        "zh": "BCG（卡介苗）疫苗可建立对结核杆菌的免疫力。皮内BCG疫苗接种在左臂三角肌部位。接种后2-3周，接种部位可能会形成小溃疡，这是正常反应。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 궤양, 림프절 비대 (드물게)",
+        "en": "Injection site ulcer, lymph node enlargement (rare)",
+        "ja": "接種部位の潰瘍、リンパ節腫大（まれに）",
+        "zh": "接种部位溃疡，淋巴结肿大（罕见）"
+      },
+      "notes": {
+        "ko": "국가 지원 백신은 피내용 BCG이며, 경피용 BCG는 국가 지원 대상이 아니라 비용을 본인이 부담합니다. 미숙아는 담당 의사와 상담 후 접종 시기를 결정합니다.",
+        "en": "The nationally funded vaccine is intradermal BCG; percutaneous BCG is not covered and is paid out of pocket. For premature infants, consult a doctor to determine vaccination timing.",
+        "ja": "公費対象は皮内用BCGで、経皮用BCGは公費対象外（自己負担）です。未熟児は担当医と相談の上、接種時期を決定します。",
+        "zh": "国家资助的是皮内注射BCG，经皮BCG不在资助范围内，需自费。早产儿应咨询医生确定接种时间。"
+      }
+    },
+    {
+      "id": "hepb",
+      "name": {
+        "ko": "B형간염",
+        "en": "Hepatitis B",
+        "ja": "B型肝炎",
+        "zh": "乙型肝炎"
+      },
+      "disease": {
+        "ko": "B형간염",
+        "en": "Hepatitis B",
+        "ja": "B型肝炎",
+        "zh": "乙型肝炎"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 0,
+            "label": {
+              "ko": "출생 시",
+              "en": "At birth",
+              "ja": "出生時",
+              "zh": "出生时"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 1,
+            "label": {
+              "ko": "생후 1개월",
+              "en": "1 month",
+              "ja": "生後1ヶ月",
+              "zh": "出生后1个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "label": {
+              "ko": "생후 6개월",
+              "en": "6 months",
+              "ja": "生後6ヶ月",
+              "zh": "出生后6个月"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "B형간염 바이러스 감염을 예방하는 백신으로, 총 3회 접종합니다.",
+        "en": "A vaccine to prevent Hepatitis B virus infection, administered in 3 doses.",
+        "ja": "B型肝炎ウイルス感染を予防するワクチンで、計3回接種します。",
+        "zh": "预防乙型肝炎病毒感染的疫苗，共接种3次。"
+      },
+      "detailedDescription": {
+        "ko": "B형간염 백신은 B형간염 바이러스(HBV) 감염을 예방합니다. 출생 시, 생후 1개월, 생후 6개월에 총 3회 접종합니다. 모체가 B형간염 양성인 경우, 출생 후 12시간 이내에 백신과 함께 면역글로불린(HBIG)을 투여합니다.",
+        "en": "The Hepatitis B vaccine prevents HBV infection. It is administered in 3 doses: at birth, 1 month, and 6 months. If the mother is HBV-positive, immunoglobulin (HBIG) is also given within 12 hours of birth.",
+        "ja": "B型肝炎ワクチンはHBV感染を予防します。出生時、生後1ヶ月、生後6ヶ月の計3回接種します。母親がB型肝炎陽性の場合、出生後12時間以内にワクチンと免疫グロブリン（HBIG）を投与します。",
+        "zh": "乙型肝炎疫苗可预防HBV感染。共接种3次：出生时、1个月和6个月。如果母亲为HBV阳性，则在出生后12小时内同时注射疫苗和免疫球蛋白（HBIG）。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 발열 (경미)",
+        "en": "Injection site pain, mild fever",
+        "ja": "接種部位の痛み、発熱（軽度）",
+        "zh": "接种部位疼痛，轻微发热"
+      },
+      "notes": {
+        "ko": "모체 HBsAg 양성 시 출생 후 12시간 이내 접종 필수",
+        "en": "If mother is HBsAg positive, vaccination within 12 hours of birth is essential",
+        "ja": "母親がHBsAg陽性の場合、出生後12時間以内の接種が必須",
+        "zh": "如母亲HBsAg阳性，须在出生后12小时内接种"
+      }
+    },
+    {
+      "id": "dtap",
+      "name": {
+        "ko": "DTaP(디프테리아/파상풍/백일해)",
+        "en": "DTaP (Diphtheria/Tetanus/Pertussis)",
+        "ja": "DTaP（ジフテリア/破傷風/百日咳）",
+        "zh": "DTaP（白喉/破伤风/百日咳）"
+      },
+      "disease": {
+        "ko": "디프테리아, 파상풍, 백일해",
+        "en": "Diphtheria, Tetanus, Pertussis",
+        "ja": "ジフテリア、破傷風、百日咳",
+        "zh": "白喉、破伤风、百日咳"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 2,
+            "label": {
+              "ko": "생후 2개월",
+              "en": "2 months",
+              "ja": "生後2ヶ月",
+              "zh": "出生后2个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 4,
+            "label": {
+              "ko": "생후 4개월",
+              "en": "4 months",
+              "ja": "生後4ヶ月",
+              "zh": "出生后4个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "label": {
+              "ko": "생후 6개월",
+              "en": "6 months",
+              "ja": "生後6ヶ月",
+              "zh": "出生后6个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 4,
+          "recommendedAge": {
+            "minMonths": 15,
+            "maxMonths": 18,
+            "label": {
+              "ko": "생후 15~18개월",
+              "en": "15-18 months",
+              "ja": "生後15〜18ヶ月",
+              "zh": "出生后15-18个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 5,
+          "recommendedAge": {
+            "minMonths": 48,
+            "maxMonths": 72,
+            "label": {
+              "ko": "만 4~6세",
+              "en": "4-6 years",
+              "ja": "4〜6歳",
+              "zh": "4-6岁"
+            }
+          }
+        },
+        {
+          "doseNumber": 6,
+          "recommendedAge": {
+            "minMonths": 132,
+            "maxMonths": 144,
+            "label": {
+              "ko": "만 11~12세 (Tdap/Td)",
+              "en": "11-12 years (Tdap/Td)",
+              "ja": "11〜12歳（Tdap/Td）",
+              "zh": "11-12岁（Tdap/Td）"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "디프테리아, 파상풍, 백일해를 예방하는 혼합백신으로, 총 5회 접종하고 만 11~12세에 Tdap 또는 Td로 6차 접종합니다.",
+        "en": "A combination vaccine preventing diphtheria, tetanus, and pertussis, given in 5 doses, followed by a 6th dose of Tdap or Td at 11-12 years.",
+        "ja": "ジフテリア、破傷風、百日咳を予防する混合ワクチンで、計5回接種し、11〜12歳にTdapまたはTdで6回目を接種します。",
+        "zh": "预防白喉、破伤风和百日咳的联合疫苗，共接种5次，11-12岁时用Tdap或Td进行第6次接种。"
+      },
+      "detailedDescription": {
+        "ko": "DTaP 백신은 디프테리아, 파상풍, 백일해 세 가지 질병을 동시에 예방하는 혼합백신입니다. 기초접종 3회(2, 4, 6개월)와 추가접종 2회(15~18개월, 만 4~6세)로 총 5회 접종합니다. 만 11~12세에는 Tdap 또는 Td 백신으로 6차 추가접종을 합니다.",
+        "en": "The DTaP vaccine is a combination vaccine that simultaneously prevents three diseases. It consists of 3 primary doses (2, 4, 6 months) and 2 boosters (15-18 months, 4-6 years). A 6th booster with Tdap or Td is given at 11-12 years.",
+        "ja": "DTaPワクチンは3つの疾患を同時に予防する混合ワクチンです。基礎接種3回（2、4、6ヶ月）と追加接種2回（15〜18ヶ月、4〜6歳）の計5回接種します。11〜12歳にTdapまたはTdワクチンで6回目の追加接種を行います。",
+        "zh": "DTaP疫苗是同时预防三种疾病的联合疫苗。基础接种3次（2、4、6个月）和加强接种2次（15-18个月、4-6岁），共5次。11-12岁时使用Tdap或Td疫苗进行第6次加强接种。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 발적/부종, 발열, 보챔",
+        "en": "Redness/swelling at injection site, fever, fussiness",
+        "ja": "接種部位の発赤/腫脹、発熱、機嫌が悪くなる",
+        "zh": "接种部位红肿，发热，烦躁"
+      },
+      "notes": {
+        "ko": "6차(만 11~12세)는 Tdap 또는 Td 백신으로 접종합니다. 만 7세 이상은 DTaP를 접종하지 않습니다.",
+        "en": "The 6th dose (11-12 years) uses Tdap or Td. DTaP is not given at age 7 or older.",
+        "ja": "6回目（11〜12歳）はTdapまたはTdワクチンで接種します。7歳以上はDTaPを接種しません。",
+        "zh": "第6次（11-12岁）使用Tdap或Td疫苗。7岁及以上不接种DTaP。"
+      }
+    },
+    {
+      "id": "ipv",
+      "name": {
+        "ko": "IPV(폴리오)",
+        "en": "IPV (Polio)",
+        "ja": "IPV（ポリオ）",
+        "zh": "IPV（脊髓灰质炎）"
+      },
+      "disease": {
+        "ko": "폴리오(소아마비)",
+        "en": "Poliomyelitis",
+        "ja": "ポリオ（小児麻痺）",
+        "zh": "脊髓灰质炎（小儿麻痹症）"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 2,
+            "label": {
+              "ko": "생후 2개월",
+              "en": "2 months",
+              "ja": "生後2ヶ月",
+              "zh": "出生后2个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 4,
+            "label": {
+              "ko": "생후 4개월",
+              "en": "4 months",
+              "ja": "生後4ヶ月",
+              "zh": "出生后4个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "maxMonths": 18,
+            "label": {
+              "ko": "생후 6~18개월",
+              "en": "6-18 months",
+              "ja": "生後6〜18ヶ月",
+              "zh": "出生后6-18个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 4,
+          "recommendedAge": {
+            "minMonths": 48,
+            "maxMonths": 72,
+            "label": {
+              "ko": "만 4~6세",
+              "en": "4-6 years",
+              "ja": "4〜6歳",
+              "zh": "4-6岁"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "폴리오(소아마비)를 예방하는 불활성화 백신으로, 총 4회 접종합니다.",
+        "en": "An inactivated vaccine to prevent polio, administered in 4 doses.",
+        "ja": "ポリオを予防する不活化ワクチンで、計4回接種します。",
+        "zh": "预防脊髓灰质炎的灭活疫苗，共接种4次。"
+      },
+      "detailedDescription": {
+        "ko": "IPV(Inactivated Poliovirus Vaccine)는 폴리오바이러스에 대한 면역력을 형성하는 주사용 불활성화 백신입니다. 기초접종 3회(2, 4, 6~18개월)와 추가접종 1회(만 4~6세)로 총 4회 접종합니다.",
+        "en": "IPV is an injectable inactivated vaccine that builds immunity against poliovirus. It consists of 3 primary doses (2, 4, 6-18 months) and 1 booster (4-6 years).",
+        "ja": "IPVはポリオウイルスに対する免疫力を形成する注射用不活化ワクチンです。基礎接種3回（2、4、6〜18ヶ月）と追加接種1回（4〜6歳）の計4回接種します。",
+        "zh": "IPV是一种建立脊髓灰质炎病毒免疫力的注射用灭活疫苗。基础接种3次（2、4、6-18个月）和加强接种1次（4-6岁），共4次。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증/발적 (경미)",
+        "en": "Mild pain/redness at injection site",
+        "ja": "接種部位の痛み/発赤（軽度）",
+        "zh": "接种部位轻微疼痛/红肿"
+      },
+      "notes": {
+        "ko": "DTaP-IPV 혼합백신으로 동시 접종 가능",
+        "en": "Can be co-administered as DTaP-IPV combination vaccine",
+        "ja": "DTaP-IPV混合ワクチンとして同時接種可能",
+        "zh": "可与DTaP-IPV联合疫苗同时接种"
+      }
+    },
+    {
+      "id": "hib",
+      "name": {
+        "ko": "Hib(뇌수막염)",
+        "en": "Hib (Meningitis)",
+        "ja": "Hib（髄膜炎）",
+        "zh": "Hib（脑膜炎）"
+      },
+      "disease": {
+        "ko": "b형 헤모필루스 인플루엔자",
+        "en": "Haemophilus influenzae type b",
+        "ja": "b型インフルエンザ菌",
+        "zh": "b型流感嗜血杆菌"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 2,
+            "label": {
+              "ko": "생후 2개월",
+              "en": "2 months",
+              "ja": "生後2ヶ月",
+              "zh": "出生后2个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 4,
+            "label": {
+              "ko": "생후 4개월",
+              "en": "4 months",
+              "ja": "生後4ヶ月",
+              "zh": "出生后4个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "label": {
+              "ko": "생후 6개월",
+              "en": "6 months",
+              "ja": "生後6ヶ月",
+              "zh": "出生后6个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 4,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 15,
+            "label": {
+              "ko": "생후 12~15개월",
+              "en": "12-15 months",
+              "ja": "生後12〜15ヶ月",
+              "zh": "出生后12-15个月"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "b형 헤모필루스 인플루엔자균에 의한 수막염 등을 예방하는 백신입니다.",
+        "en": "A vaccine to prevent meningitis caused by Haemophilus influenzae type b.",
+        "ja": "b型インフルエンザ菌による髄膜炎などを予防するワクチンです。",
+        "zh": "预防由b型流感嗜血杆菌引起的脑膜炎等的疫苗。"
+      },
+      "detailedDescription": {
+        "ko": "Hib 백신은 b형 헤모필루스 인플루엔자균(Haemophilus influenzae type b)에 의한 뇌수막염, 후두개염, 패혈증 등 침습성 감염을 예방합니다.",
+        "en": "The Hib vaccine prevents invasive infections such as meningitis, epiglottitis, and sepsis caused by Haemophilus influenzae type b.",
+        "ja": "Hibワクチンはb型インフルエンザ菌による髄膜炎、喉頭蓋炎、敗血症などの侵襲性感染を予防します。",
+        "zh": "Hib疫苗可预防由b型流感嗜血杆菌引起的脑膜炎、会厌炎和败血症等侵袭性感染。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 발적/부종, 미열",
+        "en": "Redness/swelling at injection site, low fever",
+        "ja": "接種部位の発赤/腫脹、微熱",
+        "zh": "接种部位红肿，低热"
+      },
+      "notes": {
+        "ko": "DTaP-IPV/Hib 혼합백신으로 접종 가능",
+        "en": "Can be administered as DTaP-IPV/Hib combination vaccine",
+        "ja": "DTaP-IPV/Hib混合ワクチンとして接種可能",
+        "zh": "可作为DTaP-IPV/Hib联合疫苗接种"
+      }
+    },
+    {
+      "id": "pcv",
+      "name": {
+        "ko": "PCV(폐렴구균)",
+        "en": "PCV (Pneumococcal)",
+        "ja": "PCV（肺炎球菌）",
+        "zh": "PCV（肺炎球菌）"
+      },
+      "disease": {
+        "ko": "폐렴구균",
+        "en": "Pneumococcal disease",
+        "ja": "肺炎球菌感染症",
+        "zh": "肺炎球菌病"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 2,
+            "label": {
+              "ko": "생후 2개월",
+              "en": "2 months",
+              "ja": "生後2ヶ月",
+              "zh": "出生后2个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 4,
+            "label": {
+              "ko": "생후 4개월",
+              "en": "4 months",
+              "ja": "生後4ヶ月",
+              "zh": "出生后4个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "label": {
+              "ko": "생후 6개월",
+              "en": "6 months",
+              "ja": "生後6ヶ月",
+              "zh": "出生后6个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 4,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 15,
+            "label": {
+              "ko": "생후 12~15개월",
+              "en": "12-15 months",
+              "ja": "生後12〜15ヶ月",
+              "zh": "出生后12-15个月"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "폐렴구균에 의한 침습성 감염을 예방하는 단백결합 백신입니다.",
+        "en": "A conjugate vaccine to prevent invasive pneumococcal disease.",
+        "ja": "肺炎球菌による侵襲性感染を予防する結合型ワクチンです。",
+        "zh": "预防侵袭性肺炎球菌病的结合疫苗。"
+      },
+      "detailedDescription": {
+        "ko": "PCV(Pneumococcal Conjugate Vaccine)는 폐렴구균에 의한 수막염, 균혈증, 폐렴 등 침습성 감염을 예방합니다. 기초접종 3회와 추가접종 1회로 총 4회 접종합니다.",
+        "en": "PCV prevents invasive infections such as meningitis, bacteremia, and pneumonia caused by pneumococcus. It consists of 3 primary doses and 1 booster for a total of 4 doses.",
+        "ja": "PCVは肺炎球菌による髄膜炎、菌血症、肺炎などの侵襲性感染を予防します。基礎接種3回と追加接種1回の計4回接種します。",
+        "zh": "PCV可预防由肺炎球菌引起的脑膜炎、菌血症和肺炎等侵袭性感染。基础接种3次和加强接种1次，共4次。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 발열, 보챔",
+        "en": "Injection site pain, fever, irritability",
+        "ja": "接種部位の痛み、発熱、機嫌が悪くなる",
+        "zh": "接种部位疼痛，发热，烦躁"
+      },
+      "notes": {
+        "ko": "기저질환이 있는 소아는 추가 접종이 필요할 수 있음",
+        "en": "Children with underlying conditions may need additional doses",
+        "ja": "基礎疾患のある小児は追加接種が必要な場合があります",
+        "zh": "有基础疾病的儿童可能需要额外接种"
+      }
+    },
+    {
+      "id": "rv",
+      "name": {
+        "ko": "로타바이러스",
+        "en": "Rotavirus",
+        "ja": "ロタウイルス",
+        "zh": "轮状病毒"
+      },
+      "disease": {
+        "ko": "로타바이러스 위장관염",
+        "en": "Rotavirus gastroenteritis",
+        "ja": "ロタウイルス胃腸炎",
+        "zh": "轮状病毒胃肠炎"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 2,
+            "label": {
+              "ko": "생후 2개월",
+              "en": "2 months",
+              "ja": "生後2ヶ月",
+              "zh": "出生后2个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 4,
+            "label": {
+              "ko": "생후 4개월",
+              "en": "4 months",
+              "ja": "生後4ヶ月",
+              "zh": "出生后4个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 6,
+            "maxMonths": 8,
+            "label": {
+              "ko": "생후 6개월 (로타텍만)",
+              "en": "6 months (RotaTeq only)",
+              "ja": "生後6ヶ月（ロタテックのみ）",
+              "zh": "出生后6个月（仅RotaTeq）"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "로타바이러스에 의한 심한 설사를 예방하는 경구용 백신입니다.",
+        "en": "An oral vaccine to prevent severe diarrhea caused by rotavirus.",
+        "ja": "ロタウイルスによる重度の下痢を予防する経口ワクチンです。",
+        "zh": "预防轮状病毒引起的严重腹泻的口服疫苗。"
+      },
+      "detailedDescription": {
+        "ko": "로타바이러스 백신은 영유아에서 심한 설사와 탈수를 일으키는 로타바이러스 감염을 예방합니다. 경구 투여하며, 백신 종류에 따라 2회(로타릭스) 또는 3회(로타텍) 접종합니다.",
+        "en": "The rotavirus vaccine prevents rotavirus infection that causes severe diarrhea and dehydration in infants. It is administered orally in 2 doses (Rotarix) or 3 doses (RotaTeq).",
+        "ja": "ロタウイルスワクチンは、乳幼児に重度の下痢と脱水を引き起こすロタウイルス感染を予防します。経口投与で、ワクチンの種類により2回（ロタリックス）または3回（ロタテック）接種します。",
+        "zh": "轮状病毒疫苗可预防导致婴幼儿严重腹泻和脱水的轮状病毒感染。口服给药，根据疫苗种类接种2次（Rotarix）或3次（RotaTeq）。"
+      },
+      "sideEffects": {
+        "ko": "일시적 구토, 설사, 보챔",
+        "en": "Temporary vomiting, diarrhea, fussiness",
+        "ja": "一時的な嘔吐、下痢、機嫌が悪くなる",
+        "zh": "暂时性呕吐、腹泻、烦躁"
+      },
+      "notes": {
+        "ko": "로타릭스(RV1)는 2회(생후 2·4개월), 로타텍(RV5)은 3회(생후 2·4·6개월) 접종하며, 3차는 로타텍을 접종한 경우에만 해당합니다. 1차는 늦어도 생후 14주 6일까지, 모든 접종은 생후 8개월 0일까지 마칩니다.",
+        "en": "Rotarix (RV1) is given in 2 doses (2 and 4 months) and RotaTeq (RV5) in 3 doses (2, 4, and 6 months); the 3rd dose applies only to RotaTeq. Give the 1st dose by 14 weeks 6 days of age and complete all doses by 8 months 0 days.",
+        "ja": "ロタリックス（RV1）は2回（生後2・4ヶ月）、ロタテック（RV5）は3回（生後2・4・6ヶ月）接種し、3回目はロタテックの場合のみです。1回目は遅くとも生後14週6日まで、すべての接種は生後8ヶ月0日までに完了します。",
+        "zh": "Rotarix（RV1）接种2次（2、4个月），RotaTeq（RV5）接种3次（2、4、6个月），第3次仅适用于RotaTeq。第1次最迟在出生后14周6天内接种，所有接种在出生后8个月0天前完成。"
+      }
+    },
+    {
+      "id": "mmr",
+      "name": {
+        "ko": "MMR(홍역/유행성이하선염/풍진)",
+        "en": "MMR (Measles/Mumps/Rubella)",
+        "ja": "MMR（麻疹/おたふく/風疹）",
+        "zh": "MMR（麻疹/腮腺炎/风疹）"
+      },
+      "disease": {
+        "ko": "홍역, 유행성이하선염, 풍진",
+        "en": "Measles, Mumps, Rubella",
+        "ja": "麻疹、おたふくかぜ、風疹",
+        "zh": "麻疹、腮腺炎、风疹"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 15,
+            "label": {
+              "ko": "생후 12~15개월",
+              "en": "12-15 months",
+              "ja": "生後12〜15ヶ月",
+              "zh": "出生后12-15个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 48,
+            "maxMonths": 72,
+            "label": {
+              "ko": "만 4~6세",
+              "en": "4-6 years",
+              "ja": "4〜6歳",
+              "zh": "4-6岁"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "홍역, 유행성이하선염(볼거리), 풍진을 예방하는 혼합 생백신입니다.",
+        "en": "A combined live vaccine preventing measles, mumps, and rubella.",
+        "ja": "麻疹、おたふくかぜ、風疹を予防する混合生ワクチンです。",
+        "zh": "预防麻疹、腮腺炎和风疹的联合减毒活疫苗。"
+      },
+      "detailedDescription": {
+        "ko": "MMR 백신은 홍역, 유행성이하선염, 풍진 세 가지 질병을 동시에 예방하는 약독화 생백신입니다. 1차 접종(12~15개월)과 2차 접종(만 4~6세) 총 2회 접종합니다.",
+        "en": "The MMR vaccine is a live attenuated vaccine that simultaneously prevents three diseases. Two doses are given: first at 12-15 months and second at 4-6 years.",
+        "ja": "MMRワクチンは3つの疾患を同時に予防する弱毒生ワクチンです。1回目（12〜15ヶ月）と2回目（4〜6歳）の計2回接種します。",
+        "zh": "MMR疫苗是同时预防三种疾病的减毒活疫苗。共接种2次：第一次在12-15个月，第二次在4-6岁。"
+      },
+      "sideEffects": {
+        "ko": "발열, 발진 (접종 후 7~10일), 관절통 (드물게)",
+        "en": "Fever, rash (7-10 days post-vaccination), joint pain (rare)",
+        "ja": "発熱、発疹（接種後7〜10日）、関節痛（まれに）",
+        "zh": "发热、皮疹（接种后7-10天）、关节痛（罕见）"
+      },
+      "notes": {
+        "ko": "면역결핍 환자는 접종 금기",
+        "en": "Contraindicated for immunocompromised patients",
+        "ja": "免疫不全患者は接種禁忌",
+        "zh": "免疫缺陷患者禁忌接种"
+      }
+    },
+    {
+      "id": "var",
+      "name": {
+        "ko": "수두",
+        "en": "Varicella",
+        "ja": "水痘",
+        "zh": "水痘"
+      },
+      "disease": {
+        "ko": "수두",
+        "en": "Chickenpox (Varicella)",
+        "ja": "水痘",
+        "zh": "水痘"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 15,
+            "label": {
+              "ko": "생후 12~15개월",
+              "en": "12-15 months",
+              "ja": "生後12〜15ヶ月",
+              "zh": "出生后12-15个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 15,
+            "label": {
+              "ko": "1차 접종 3개월 이후 (단체생활 시)",
+              "en": "3+ months after 1st dose (group settings)",
+              "ja": "1回目の3ヶ月以降（集団生活の場合）",
+              "zh": "第1次接种3个月后（集体生活时）"
+            }
+          },
+          "category": "optional"
+        }
+      ],
+      "description": {
+        "ko": "수두를 예방하는 약독화 생백신으로, 생후 12~15개월에 1회 접종합니다. 2차 접종은 선택입니다.",
+        "en": "A live attenuated vaccine to prevent chickenpox, given in 1 dose at 12-15 months. A 2nd dose is optional.",
+        "ja": "水痘を予防する弱毒生ワクチンで、生後12〜15ヶ月に1回接種します。2回目は任意です。",
+        "zh": "预防水痘的减毒活疫苗，在12-15个月时接种1次。第2次为自选接种。"
+      },
+      "detailedDescription": {
+        "ko": "수두 백신은 수두-대상포진 바이러스(VZV)에 의한 수두를 예방합니다. 국가예방접종은 생후 12~15개월 1회입니다. 대한소아청소년과학회는 수두가 유행하는 어린이집·학교 등에 다니는 생후 12개월~만 12세 소아에게 1차 접종 3개월 이후 2차 접종을 할 수 있다고 권고합니다.",
+        "en": "The varicella vaccine prevents chickenpox caused by varicella-zoster virus (VZV). The national program covers 1 dose at 12-15 months. The Korean Pediatric Society advises that children aged 12 months to 12 years who attend daycare, schools, or other settings where chickenpox is common may receive a 2nd dose at least 3 months after the 1st.",
+        "ja": "水痘ワクチンは水痘帯状疱疹ウイルス（VZV）による水痘を予防します。国の定期接種は生後12〜15ヶ月の1回です。大韓小児青少年科学会は、水痘が流行している保育施設や学校などに通う生後12ヶ月〜12歳の子どもに、1回目の3ヶ月以降に2回目を接種できるとしています。",
+        "zh": "水痘疫苗可预防由水痘-带状疱疹病毒（VZV）引起的水痘。国家免疫规划为12-15个月接种1次。韩国儿科学会建议，在水痘流行的托儿所、学校等场所的12个月至12岁儿童，可在第1次接种3个月后接种第2次。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 미열, 경미한 발진",
+        "en": "Injection site pain, low fever, mild rash",
+        "ja": "接種部位の痛み、微熱、軽度の発疹",
+        "zh": "接种部位疼痛，低热，轻微皮疹"
+      },
+      "notes": {
+        "ko": "2차 접종은 국가 지원 대상이 아니라 비용을 본인이 부담합니다. 면역결핍 환자는 접종 금기입니다.",
+        "en": "The 2nd dose is not covered by the national program and is paid out of pocket. Contraindicated for immunocompromised patients.",
+        "ja": "2回目は公費対象外で自己負担です。免疫不全患者は接種禁忌です。",
+        "zh": "第2次不在国家资助范围内，需自费。免疫缺陷患者禁忌接种。"
+      }
+    },
+    {
+      "id": "hepa",
+      "name": {
+        "ko": "A형간염",
+        "en": "Hepatitis A",
+        "ja": "A型肝炎",
+        "zh": "甲型肝炎"
+      },
+      "disease": {
+        "ko": "A형간염",
+        "en": "Hepatitis A",
+        "ja": "A型肝炎",
+        "zh": "甲型肝炎"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 23,
+            "label": {
+              "ko": "생후 12~23개월",
+              "en": "12-23 months",
+              "ja": "生後12〜23ヶ月",
+              "zh": "出生后12-23个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 18,
+            "maxMonths": 35,
+            "label": {
+              "ko": "1차 접종 후 6~18개월",
+              "en": "6-18 months after 1st dose",
+              "ja": "1回目接種後6〜18ヶ月",
+              "zh": "第一次接种后6-18个月"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "A형간염 바이러스 감염을 예방하는 불활성화 백신으로, 총 2회 접종합니다.",
+        "en": "An inactivated vaccine to prevent Hepatitis A, administered in 2 doses.",
+        "ja": "A型肝炎ウイルス感染を予防する不活化ワクチンで、計2回接種します。",
+        "zh": "预防甲型肝炎病毒感染的灭活疫苗，共接种2次。"
+      },
+      "detailedDescription": {
+        "ko": "A형간염 백신은 A형간염 바이러스(HAV)에 의한 감염을 예방합니다. 1차 접종 후 6~18개월 간격으로 2차 접종을 합니다.",
+        "en": "The Hepatitis A vaccine prevents HAV infection. The second dose is given 6-18 months after the first dose.",
+        "ja": "A型肝炎ワクチンはHAV感染を予防します。1回目接種後6〜18ヶ月の間隔で2回目を接種します。",
+        "zh": "甲型肝炎疫苗可预防HAV感染。第二次接种在第一次接种后6-18个月进行。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 두통, 피로감",
+        "en": "Injection site pain, headache, fatigue",
+        "ja": "接種部位の痛み、頭痛、倦怠感",
+        "zh": "接种部位疼痛，头痛，疲劳"
+      },
+      "notes": {
+        "ko": "2012년 이후 국가예방접종 사업에 포함",
+        "en": "Included in national immunization program since 2012",
+        "ja": "2012年以降、国家予防接種事業に含まれる",
+        "zh": "2012年起纳入国家免疫规划"
+      }
+    },
+    {
+      "id": "ijev",
+      "name": {
+        "ko": "일본뇌염(불활성화)",
+        "en": "Japanese Encephalitis (Inactivated)",
+        "ja": "日本脳炎（不活化）",
+        "zh": "乙型脑炎（灭活）"
+      },
+      "disease": {
+        "ko": "일본뇌염",
+        "en": "Japanese Encephalitis",
+        "ja": "日本脳炎",
+        "zh": "乙型脑炎"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 23,
+            "label": {
+              "ko": "생후 12~23개월",
+              "en": "12-23 months",
+              "ja": "生後12〜23ヶ月",
+              "zh": "出生后12-23个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 12,
+            "maxMonths": 23,
+            "label": {
+              "ko": "1차 후 7~30일",
+              "en": "7-30 days after 1st",
+              "ja": "1回目後7〜30日",
+              "zh": "第一次后7-30天"
+            }
+          }
+        },
+        {
+          "doseNumber": 3,
+          "recommendedAge": {
+            "minMonths": 24,
+            "maxMonths": 35,
+            "label": {
+              "ko": "생후 24~35개월",
+              "en": "24-35 months",
+              "ja": "生後24〜35ヶ月",
+              "zh": "出生后24-35个月"
+            }
+          }
+        },
+        {
+          "doseNumber": 4,
+          "recommendedAge": {
+            "minMonths": 72,
+            "label": {
+              "ko": "만 6세",
+              "en": "6 years",
+              "ja": "6歳",
+              "zh": "6岁"
+            }
+          }
+        },
+        {
+          "doseNumber": 5,
+          "recommendedAge": {
+            "minMonths": 144,
+            "label": {
+              "ko": "만 12세",
+              "en": "12 years",
+              "ja": "12歳",
+              "zh": "12岁"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "일본뇌염 바이러스 감염을 예방하는 불활성화 백신으로, 총 5회 접종합니다.",
+        "en": "An inactivated vaccine to prevent Japanese encephalitis, administered in 5 doses.",
+        "ja": "日本脳炎ウイルス感染を予防する不活化ワクチンで、計5回接種します。",
+        "zh": "预防乙型脑炎病毒感染的灭活疫苗，共接种5次。"
+      },
+      "detailedDescription": {
+        "ko": "일본뇌염 불활성화 백신은 일본뇌염 바이러스에 의한 뇌염을 예방합니다. 기초접종 3회와 추가접종 2회(만 6세, 만 12세)로 총 5회 접종합니다.",
+        "en": "The inactivated JE vaccine prevents encephalitis caused by Japanese encephalitis virus. It consists of 3 primary doses and 2 boosters (6 years, 12 years).",
+        "ja": "日本脳炎不活化ワクチンは日本脳炎ウイルスによる脳炎を予防します。基礎接種3回と追加接種2回（6歳、12歳）の計5回接種します。",
+        "zh": "乙型脑炎灭活疫苗可预防乙型脑炎病毒引起的脑炎。基础接种3次和加强接种2次（6岁、12岁），共5次。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 발열, 근육통",
+        "en": "Injection site pain, fever, muscle pain",
+        "ja": "接種部位の痛み、発熱、筋肉痛",
+        "zh": "接种部位疼痛，发热，肌肉痛"
+      },
+      "notes": {
+        "ko": "약독화 생백신을 선택하면 2회(생후 12~23개월, 그 12개월 후)로 완료합니다. 국가 지원 생백신은 씨디.제박스이며, 이모젭은 국가 지원 대상이 아닙니다(유료). 백신 종류 간 교차접종은 권장하지 않습니다.",
+        "en": "If the live attenuated vaccine is chosen, the series is complete in 2 doses (12-23 months, then 12 months later). The nationally funded live vaccine is CD.JEVAX; IMOJEV is not covered (paid). Switching between vaccine types is not recommended.",
+        "ja": "弱毒生ワクチンを選ぶ場合は2回（生後12〜23ヶ月、その12ヶ月後）で完了します。公費対象の生ワクチンはCD.JEVAXで、IMOJEVは公費対象外（自己負担）です。ワクチンの種類間の交差接種は推奨されません。",
+        "zh": "如选择减毒活疫苗，接种2次即完成（12-23个月，12个月后再接种1次）。国家资助的活疫苗为CD.JEVAX，IMOJEV不在资助范围内（自费）。不建议在不同疫苗类型之间交叉接种。"
+      }
+    },
+    {
+      "id": "flu",
+      "name": {
+        "ko": "인플루엔자",
+        "en": "Influenza",
+        "ja": "インフルエンザ",
+        "zh": "流感"
+      },
+      "disease": {
+        "ko": "인플루엔자(독감)",
+        "en": "Influenza (Flu)",
+        "ja": "インフルエンザ",
+        "zh": "流行性感冒"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 6,
+            "label": {
+              "ko": "생후 6개월 (첫해 1차)",
+              "en": "6 months (1st dose, first season)",
+              "ja": "生後6ヶ月（初年度1回目）",
+              "zh": "6个月（首年第1次）"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 7,
+            "label": {
+              "ko": "1차 4주 후 (첫해 2차)",
+              "en": "4 weeks after 1st dose (first season)",
+              "ja": "1回目の4週後（初年度2回目）",
+              "zh": "第1次后4周（首年第2次）"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "인플루엔자(독감)를 예방하는 백신으로, 매년 접종합니다.",
+        "en": "A vaccine to prevent influenza, administered annually.",
+        "ja": "インフルエンザを予防するワクチンで、毎年接種します。",
+        "zh": "预防流感的疫苗，每年接种。"
+      },
+      "detailedDescription": {
+        "ko": "인플루엔자 백신은 매년 유행하는 인플루엔자 바이러스에 대한 면역력을 형성합니다. 생후 6개월부터 접종 가능하며, 처음 접종하는 만 9세 미만 아이는 첫해에 4주 간격으로 2회, 이후 매년 1회 접종합니다.",
+        "en": "The influenza vaccine builds immunity against annually circulating flu viruses. Available from 6 months of age. Children under 9 receiving it for the first time get 2 doses 4 weeks apart in the first season, then 1 dose every year.",
+        "ja": "インフルエンザワクチンは毎年流行するインフルエンザウイルスに対する免疫力を形成します。生後6ヶ月から接種可能で、初めて接種する9歳未満の子どもは初年度に4週間隔で2回、その後は毎年1回接種します。",
+        "zh": "流感疫苗可建立对每年流行的流感病毒的免疫力。6个月起可接种，首次接种的9岁以下儿童在首个流行季间隔4周接种2次，之后每年接种1次。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증, 미열, 근육통",
+        "en": "Injection site pain, low fever, muscle aches",
+        "ja": "接種部位の痛み、微熱、筋肉痛",
+        "zh": "接种部位疼痛，低热，肌肉痛"
+      },
+      "notes": {
+        "ko": "첫해 2회 접종 후에는 매년 유행 시기 전에 1회 접종합니다. 국가 지원 연령은 절기마다 공고됩니다(2026-27절기: 생후 6개월~만 14세). 계란 알레르기가 있으면 의사와 상담하세요.",
+        "en": "After the 2 first-season doses, give 1 dose every year before flu season. Funded age groups are announced each season (2026-27: 6 months to 14 years). Consult a doctor if your child has an egg allergy.",
+        "ja": "初年度の2回接種後は、毎年流行期の前に1回接種します。公費対象年齢はシーズンごとに告示されます（2026-27シーズン：生後6ヶ月〜14歳）。卵アレルギーがある場合は医師に相談してください。",
+        "zh": "首年接种2次后，每年流行季前接种1次。国家资助年龄每个流行季公布（2026-27季：6个月至14岁）。如有鸡蛋过敏，请咨询医生。"
+      }
+    },
+    {
+      "id": "hpv",
+      "name": {
+        "ko": "HPV(사람유두종바이러스)",
+        "en": "HPV (Human Papillomavirus)",
+        "ja": "HPV（ヒトパピローマウイルス）",
+        "zh": "HPV（人乳头瘤病毒）"
+      },
+      "disease": {
+        "ko": "자궁경부암 등 HPV 관련 질환",
+        "en": "Cervical cancer and other HPV-related diseases",
+        "ja": "子宮頸がんなどのHPV関連疾患",
+        "zh": "宫颈癌等HPV相关疾病"
+      },
+      "category": "national",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 144,
+            "label": {
+              "ko": "만 12세",
+              "en": "12 years",
+              "ja": "12歳",
+              "zh": "12岁"
+            }
+          }
+        },
+        {
+          "doseNumber": 2,
+          "recommendedAge": {
+            "minMonths": 150,
+            "maxMonths": 156,
+            "label": {
+              "ko": "1차 6~12개월 후",
+              "en": "6-12 months after 1st dose",
+              "ja": "1回目の6〜12ヶ月後",
+              "zh": "第1次后6-12个月"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "자궁경부암 등 HPV 관련 질환을 예방하는 백신으로, 만 12세에 6~12개월 간격으로 2회 접종합니다.",
+        "en": "A vaccine that prevents cervical cancer and other HPV-related diseases, given in 2 doses 6-12 months apart at age 12.",
+        "ja": "子宮頸がんなどのHPV関連疾患を予防するワクチンで、12歳に6〜12ヶ月間隔で2回接種します。",
+        "zh": "预防宫颈癌等HPV相关疾病的疫苗，12岁时间隔6-12个月接种2次。"
+      },
+      "detailedDescription": {
+        "ko": "HPV 백신은 자궁경부암, 생식기 사마귀 등을 일으키는 사람유두종바이러스 감염을 예방합니다. 만 12~14세에 접종을 시작하면 6~12개월 간격으로 2회, 만 15세 이후에 시작하면 3회(0, 2, 6개월) 접종합니다.",
+        "en": "The HPV vaccine prevents human papillomavirus infection, which can cause cervical cancer, genital warts, and other diseases. Starting at 12-14 years, 2 doses are given 6-12 months apart; starting at 15 or older, 3 doses are given (0, 2, and 6 months).",
+        "ja": "HPVワクチンは、子宮頸がんや尖圭コンジローマなどを引き起こすヒトパピローマウイルス感染を予防します。12〜14歳で接種を始める場合は6〜12ヶ月間隔で2回、15歳以降に始める場合は3回（0、2、6ヶ月）接種します。",
+        "zh": "HPV疫苗可预防可导致宫颈癌、尖锐湿疣等疾病的人乳头瘤病毒感染。12-14岁开始接种时间隔6-12个月接种2次，15岁及以后开始接种时接种3次（0、2、6个月）。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증/부종, 발열, 두통, 실신(접종 직후 드물게)",
+        "en": "Injection site pain/swelling, fever, headache, fainting (rare, right after vaccination)",
+        "ja": "接種部位の痛み/腫れ、発熱、頭痛、失神（接種直後にまれに）",
+        "zh": "接种部位疼痛/肿胀，发热，头痛，晕厥（接种后罕见）"
+      },
+      "notes": {
+        "ko": "국가 지원 백신은 HPV 4가이며, 9가는 국가 지원 대상이 아닙니다(유료). 지원 대상은 해마다 공고되며, 2026년에는 만 12~17세 여성 청소년과 만 12세 남성 청소년(2014년생, 2026년 5월 6일부터)입니다. 접종 직후 실신할 수 있으므로 잠시 앉아서 상태를 살핍니다.",
+        "en": "The nationally funded vaccine is the 4-valent HPV vaccine; the 9-valent vaccine is not covered (paid). Eligible groups are announced each year; in 2026 they are girls aged 12-17 and boys aged 12 (born in 2014, from May 6, 2026). Because fainting can occur right after vaccination, stay seated for a while afterward.",
+        "ja": "公費対象は4価HPVワクチンで、9価は公費対象外（自己負担）です。対象者は毎年告示され、2026年は12〜17歳の女子と12歳の男子（2014年生まれ、2026年5月6日から）です。接種直後に失神することがあるため、しばらく座って様子を見ます。",
+        "zh": "国家资助的是4价HPV疫苗，9价不在资助范围内（自费）。资助对象每年公布，2026年为12-17岁女生和12岁男生（2014年出生，自2026年5月6日起）。接种后可能晕厥，请坐下观察片刻。"
+      }
+    },
+    {
+      "id": "nirsevimab",
+      "name": {
+        "ko": "RSV 항체주사(니르세비맙)",
+        "en": "RSV Antibody (Nirsevimab)",
+        "ja": "RSV抗体注射（ニルセビマブ）",
+        "zh": "RSV抗体注射（尼塞韦单抗）"
+      },
+      "disease": {
+        "ko": "RSV(호흡기세포융합바이러스) 감염",
+        "en": "RSV (respiratory syncytial virus) infection",
+        "ja": "RSウイルス感染症",
+        "zh": "呼吸道合胞病毒（RSV）感染"
+      },
+      "category": "optional",
+      "doses": [
+        {
+          "doseNumber": 1,
+          "recommendedAge": {
+            "minMonths": 0,
+            "maxMonths": 6,
+            "label": {
+              "ko": "첫 RSV 유행 시기 (생후 6개월 미만)",
+              "en": "First RSV season (under 6 months)",
+              "ja": "初めてのRSウイルス流行期（生後6ヶ月未満）",
+              "zh": "首个RSV流行季（6个月以下）"
+            }
+          }
+        }
+      ],
+      "description": {
+        "ko": "RSV(호흡기세포융합바이러스)에 의한 세기관지염·폐렴을 예방하는 장기지속형 항체주사로, 첫 RSV 유행 시기에 1회 맞습니다. 백신이 아니라 항체를 직접 넣어 주는 수동면역입니다.",
+        "en": "A long-acting antibody injection that prevents bronchiolitis and pneumonia caused by RSV, given once in the first RSV season. It is not a vaccine; it gives passive immunity by supplying antibodies directly.",
+        "ja": "RSウイルスによる細気管支炎・肺炎を予防する長時間作用型の抗体注射で、初めてのRSウイルス流行期に1回接種します。ワクチンではなく、抗体を直接投与する受動免疫です。",
+        "zh": "预防RSV引起的细支气管炎和肺炎的长效抗体注射，在首个RSV流行季注射1次。它不是疫苗，而是直接提供抗体的被动免疫。"
+      },
+      "detailedDescription": {
+        "ko": "니르세비맙(베이포투스)은 RSV에 결합하는 단클론항체를 근육에 1회 주사해 영아를 보호합니다. 대한소아청소년과학회(2025)는 첫 RSV 시즌을 맞는 모든 영아에게 1회 접종을 권장합니다. RSV 유행 시기(10월~3월)에 태어난 아기는 출생 직후(생후 1주 이내), 4~9월에 태어난 아기는 유행 직전·초기(9월 말~10월)에 맞습니다.",
+        "en": "Nirsevimab (Beyfortus) protects infants with a single intramuscular injection of a monoclonal antibody that binds RSV. The Korean Pediatric Society (2025) recommends 1 dose for all infants entering their first RSV season. Babies born during the RSV season (October-March) receive it right after birth (within the first week); babies born in April-September receive it just before or early in the season (late September-October).",
+        "ja": "ニルセビマブ（ベイフォータス）は、RSウイルスに結合するモノクローナル抗体を筋肉に1回注射して乳児を守ります。大韓小児青少年科学会（2025年）は、初めてのRSウイルス流行期を迎えるすべての乳児に1回の接種を推奨しています。流行期（10月〜3月）に生まれた赤ちゃんは出生直後（生後1週以内）、4〜9月に生まれた赤ちゃんは流行の直前・初期（9月末〜10月）に接種します。",
+        "zh": "尼塞韦单抗（Beyfortus）通过肌肉注射1次与RSV结合的单克隆抗体来保护婴儿。韩国儿科学会（2025年）建议所有迎来首个RSV流行季的婴儿注射1次。在RSV流行季（10月至3月）出生的婴儿在出生后立即（1周内）注射，4月至9月出生的婴儿在流行季前或初期（9月底至10月）注射。"
+      },
+      "sideEffects": {
+        "ko": "접종 부위 통증·부종, 발진, 발열(드물게)",
+        "en": "Injection site pain/swelling, rash, fever (uncommon)",
+        "ja": "接種部位の痛み・腫れ、発疹、発熱（まれに）",
+        "zh": "接种部位疼痛/肿胀，皮疹，发热（少见）"
+      },
+      "notes": {
+        "ko": "국가 지원 대상이 아니라 비용을 본인이 부담합니다(2026년 기준). 접종 시기는 개월 수가 아니라 출생 시기와 RSV 유행 시기로 정하므로 정확한 날짜는 의사와 상의하세요. 중증 RSV 위험이 높은 2세 미만 소아는 두 번째 시즌에도 맞을 수 있습니다.",
+        "en": "Not covered by the national program; paid out of pocket (as of 2026). Timing depends on the birth month and the RSV season rather than age in months, so confirm the exact date with your doctor. Children under 2 at high risk of severe RSV may also receive it in their second season.",
+        "ja": "公費対象外で自己負担です（2026年時点）。接種時期は月齢ではなく出生時期とRSウイルスの流行期で決まるため、正確な日付は医師に相談してください。重症化リスクの高い2歳未満の子どもは、2シーズン目にも接種することがあります。",
+        "zh": "不在国家资助范围内，需自费（截至2026年）。注射时间取决于出生月份和RSV流行季而非月龄，请与医生确认具体日期。重症RSV风险高的2岁以下儿童在第二个流行季也可注射。"
+      }
+    }
+  ]
+}
