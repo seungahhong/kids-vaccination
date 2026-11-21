@@ -190,12 +190,14 @@ describe("AC-2.4 Android 홈: 연·월·일 선택 창에서 선택", () => {
 // FR-16(v1.7): 홈은 저장된 아이 목록(home-children, 아이마다 child-shortcut "{이름표} 일정 바로 보기")과 새 아이 추가 폼이다.
 // 이름표는 이름이 있으면 이름, 없으면 생년월일이다(U-27). 예전 생년월일 키 시드는 하이드레이션에서 아이 1명으로 옮겨진다(U-29).
 describe("AC-3.3 하이드레이션 게이트와 저장된 아이 목록", () => {
-  it("AC-3.3 AsyncStorage.getItem이 아직 resolve되지 않은 동안 홈을 렌더하면 목록이 렌더되지 않고, 아이 1명(2024-01-31) 목록으로 resolve하면 '2024-01-31 일정 바로 보기' 바로가기가 렌더된다", async () => {
+  it("AC-3.3 AsyncStorage.getItem이 아직 resolve되지 않은 동안 홈을 렌더하면 목록이 렌더되지 않고 이름 '불러오는 중'인 로딩 표시만 있으며(R4-09), 아이 1명(2024-01-31) 목록으로 resolve하면 '2024-01-31 일정 바로 보기' 바로가기가 렌더된다", async () => {
     const storage = deferStorage([STORAGE_KEYS.children]);
     await renderApp({ initialUrl: "/" });
 
     expect(screen.queryByTestId("home-children")).toBeNull();
     expect(screen.getByTestId("loading-gate")).toBeOnTheScreen();
+    // 로딩 표시(ActivityIndicator, 웹 role progressbar)는 이름 "불러오는 중"을 가진다(리뷰 R4-09)
+    expect(screen.getByLabelText("불러오는 중")).toBeOnTheScreen();
 
     await storage.resolve(STORAGE_KEYS.children, encodeChildren(ONE_CHILD));
 

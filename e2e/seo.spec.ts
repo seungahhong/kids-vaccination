@@ -55,7 +55,7 @@ test("SEO 기본 진입('/')에서 html lang이 ko, 문서 제목이 '아기 예
   expect(bodyText).not.toContain(NOSCRIPT_FACT);
 });
 
-test("SEO 설정에서 English를 고르면 html lang이 en·영어 제목, 中文을 고르면 zh·중국어 제목이 되고 새로고침 뒤에도 유지된다", async ({
+test("SEO 설정에서 English를 고르면 html lang이 en·영어 제목, 中文을 고르면 zh·중국어 제목이 되고 새로고침 뒤에도 유지된다(설정 화면 제목은 '화면 · 앱 이름', 리뷰 R4-03)", async ({
   page,
   screenOf,
 }) => {
@@ -66,17 +66,17 @@ test("SEO 설정에서 English를 고르면 html lang이 en·영어 제목, 中�
 
   await settings.getByRole("radio", { name: "English", exact: true }).click();
   await expect(htmlOf(page)).toHaveAttribute("lang", "en");
-  await expect(page).toHaveTitle(TITLES.en);
+  await expect(page).toHaveTitle(`Settings · ${TITLES.en}`);
 
   await settings.getByRole("radio", { name: "中文", exact: true }).click();
   await expect(htmlOf(page)).toHaveAttribute("lang", "zh");
-  await expect(page).toHaveTitle(TITLES.zh);
+  await expect(page).toHaveTitle(`设置 · ${TITLES.zh}`);
   await expect.poll(() => readStorage(page, LOCALE_KEY)).toBe("zh");
 
   await page.reload();
   await expect(screenOf("settings")).toBeVisible();
   await expect(htmlOf(page)).toHaveAttribute("lang", "zh");
-  await expect(page).toHaveTitle(TITLES.zh);
+  await expect(page).toHaveTitle(`设置 · ${TITLES.zh}`);
 });
 
 test.describe("SEO 기기 언어 ja-JP", () => {

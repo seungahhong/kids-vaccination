@@ -24,7 +24,12 @@ export function LoadingGate({
         testID="loading-gate"
         style={[styles.gate, { backgroundColor: theme.tokens.background }]}
       >
-        <ActivityIndicator size="large" color={theme.tokens.primary} />
+        {/* 웹에서 role progressbar가 되므로 이름을 준다(리뷰 R4-09). 하이드레이션 전이라 언어는 기기 감지값이다 */}
+        <ActivityIndicator
+          size="large"
+          color={theme.tokens.primary}
+          aria-label={i18n.t("common.loading")}
+        />
       </View>
     );
   }

@@ -198,7 +198,7 @@ test("R2-01 탭을 오가도 화면 상태(필터 '지남'·bcg-1 펼침)는 그
   await expect(bcg1Toggle).toBeFocused();
 });
 
-test("R2-01 홈 추가 폼에 2024-01-31을 넣고 제출 버튼에 Enter를 눌러 일정 화면으로 가면 포커스가 떠난 홈 화면(aria-hidden)의 제출 버튼에 남지 않고, 다음 Tab은 보이는 일정 화면의 첫 컨트롤(헤더 '아이 추가' 버튼, FR-15·16)로 간다", async ({
+test("R2-01 홈 추가 폼에 2024-01-31을 넣고 제출 버튼에 Enter를 눌러 일정 화면으로 가면 포커스가 떠난 홈 화면(aria-hidden)의 제출 버튼에 남지 않고 일정 화면 제목(h1)으로 옮겨 가며(R4-03), 다음 Tab은 제목 다음의 첫 컨트롤(아이 칩, FR-16)로 간다", async ({
   page,
   screenOf,
 }) => {
@@ -215,11 +215,15 @@ test("R2-01 홈 추가 폼에 2024-01-31을 넣고 제출 버튼에 Enter를 눌
   await expect(screenOf("schedule").locator(CARD_SELECTOR)).toHaveCount(41);
   // 리뷰 실측 3: 예전에는 activeElement가 떠난 홈 화면의 birthdate-submit에 남았다
   await expect.poll(async () => (await focusStop(page)).hidden).toBe(false);
+  // R4-03: 사라진 제출 버튼 대신 일정 화면 제목에 포커스가 있다(예전에는 body라 다음 Tab이 헤더의 첫 버튼이었다)
+  await expect(
+    screenOf("schedule").getByRole("heading", { level: 1 })
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   expect(await focusStop(page)).toEqual({
     where: "screen-schedule",
     hidden: false,
-    element: "header-add-child-button",
+    element: "child-option",
   });
 });
 

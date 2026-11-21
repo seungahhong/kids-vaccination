@@ -5,7 +5,8 @@
     "schedule": "Schedule",
     "settings": "Settings",
     "disclaimer": "This information is for reference only. Please consult a pediatrician for accurate medical advice.",
-    "dataSource": "Source: Korea Disease Control and Prevention Agency (KDCA) 2026 National Immunization Program guidelines and Korean Pediatric Society recommendations · Last updated: {date}"
+    "dataSource": "Source: Korea Disease Control and Prevention Agency (KDCA) 2026 National Immunization Program guidelines and Korean Pediatric Society recommendations · Last updated: {date}",
+    "loading": "Loading"
   },
   "home": {
     "title": "Baby Vaccination\nSchedule Manager",
@@ -52,6 +53,8 @@
     "completed": "Done",
     "completedSection": "Completed vaccinations",
     "markCompleted": "Vaccinated",
+    "markedAnnouncement": "{name}: marked as vaccinated",
+    "unmarkedAnnouncement": "{name}: unmarked as vaccinated",
     "childSelector": "Select child"
   },
   "settings": {

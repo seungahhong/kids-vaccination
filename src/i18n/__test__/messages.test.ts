@@ -273,10 +273,12 @@ const LEGACY_RESET_TEXTS: readonly string[] = [
  * + 리뷰 라운드 1 추가 1개(schedule.filterLabel, R1-07) + 일정 구역 제목 1개(schedule.pastSection, U-13)
  * + 분류 배지 2개(schedule.national·optional, U-15) + 접종 완료 3개(schedule.completed·completedSection·markCompleted, FR-14)
  * − 테마 "시스템" 1개(settings.themeSystem, v1.5 U-24) + 여러 아이 12개(home 7·schedule 1·settings 4, FR-16)
- * + 데이터 출처·업데이트 날짜 1개(common.dataSource) = 67개
+ * + 데이터 출처·업데이트 날짜 1개(common.dataSource)
+ * + 접근성 3개(common.loading 로딩 표시 이름, schedule.markedAnnouncement·unmarkedAnnouncement 완료 체크 결과 고지, 리뷰 R4) = 70개
  */
 const EXPECTED_KEYS: readonly string[] = [
   "common.appName",
+  "common.loading",
   "common.home",
   "common.schedule",
   "common.settings",
@@ -324,6 +326,8 @@ const EXPECTED_KEYS: readonly string[] = [
   "schedule.completed",
   "schedule.completedSection",
   "schedule.markCompleted",
+  "schedule.markedAnnouncement",
+  "schedule.unmarkedAnnouncement",
   "schedule.childSelector",
   "settings.title",
   "settings.theme",
@@ -379,9 +383,9 @@ describe("G-5 §2.3.0-b 확정 번역 키(신규·변경·제거)", () => {
     }
   });
 
-  it("G-5 최종 키 집합은 원본 − 제거 11개 + 신규 8개 + 리뷰 추가 1개(R1-07) + U-13 추가 1개 + U-15 추가 2개 + FR-14 추가 3개 − U-24 제거 1개(settings.themeSystem) + FR-16 추가 12개 + 출처 1개(common.dataSource) = 67개와 정확히 같다(초과 키 검사)", () => {
+  it("G-5 최종 키 집합은 원본 − 제거 11개 + 신규 8개 + 리뷰 추가 1개(R1-07) + U-13 추가 1개 + U-15 추가 2개 + FR-14 추가 3개 − U-24 제거 1개(settings.themeSystem) + FR-16 추가 12개 + 출처 1개(common.dataSource) + 접근성 3개(R4) = 70개와 정확히 같다(초과 키 검사)", () => {
     expect(dotPaths(ko)).toEqual([...EXPECTED_KEYS].sort());
-    expect(EXPECTED_KEYS).toHaveLength(67);
+    expect(EXPECTED_KEYS).toHaveLength(70);
   });
 
   it("G-5 U-24 settings.themeSystem('시스템' 테마)은 4개 파일 모두에 없다", () => {

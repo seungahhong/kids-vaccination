@@ -5,7 +5,8 @@
     "schedule": "접종 일정",
     "settings": "설정",
     "disclaimer": "이 정보는 참고용이며, 정확한 내용은 소아과 의사와 상담하세요.",
-    "dataSource": "출처: 질병관리청 「2026년 국가예방접종 지침」, 대한소아청소년과학회 권장 일정 · 최종 업데이트: {date}"
+    "dataSource": "출처: 질병관리청 「2026년 국가예방접종 지침」, 대한소아청소년과학회 권장 일정 · 최종 업데이트: {date}",
+    "loading": "불러오는 중"
   },
   "home": {
     "title": "아기 예방접종\n일정 관리",
@@ -52,6 +53,8 @@
     "completed": "완료",
     "completedSection": "접종 완료",
     "markCompleted": "접종 완료",
+    "markedAnnouncement": "{name}: 접종 완료로 표시했어요",
+    "unmarkedAnnouncement": "{name}: 접종 완료 표시를 해제했어요",
     "childSelector": "아이 선택"
   },
   "settings": {

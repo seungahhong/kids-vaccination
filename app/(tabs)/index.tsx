@@ -9,6 +9,7 @@ import { SavedChildren } from "@/components/home/SavedChildren";
 import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { requestTitleFocus } from "@/hooks/useScreenDocument";
 import { FONT_SIZE, RADIUS, SPACING } from "@/theme/tokens";
 import type { ChildId } from "@/types";
 
@@ -24,7 +25,11 @@ export default function HomeScreen(): ReactElement {
   const { children, selectChild } = useChildren();
   const router = useRouter();
 
-  const goToSchedule = () => router.navigate("/schedule");
+  // 제출 버튼이 사라지며 화면이 바뀌므로 일정 화면 제목으로 포커스를 옮기게 요청한다(웹, 리뷰 R4-03)
+  const goToSchedule = () => {
+    requestTitleFocus("screen-schedule");
+    router.navigate("/schedule");
+  };
   const openChild = (id: ChildId) => {
     selectChild(id);
     goToSchedule();

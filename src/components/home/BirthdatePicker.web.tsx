@@ -97,7 +97,8 @@ export function BirthdatePicker({
     <div
       data-testid="birthdate-input"
       role="group"
-      aria-label={t("home.birthdateLabel")}
+      // 필수 입력임을 이름에도 담는다(화면의 "필수" 표시는 보조기기에 연결되지 않음, 리뷰 R4-04 WCAG 3.3.2)
+      aria-label={`${t("home.birthdateLabel")} (${t("home.required")})`}
       lang={toLanguageTag(locale)}
       style={{ display: "flex", gap: SPACING.sm, width: "100%" }}
     >
@@ -106,6 +107,7 @@ export function BirthdatePicker({
           key={part}
           data-testid={SELECT_TEST_IDS[part]}
           aria-label={t(labelKey)}
+          aria-required
           value={parts[part] ?? ""}
           onChange={handleChange(part)}
           style={{ ...selectStyle, flex: part === "year" ? 1.3 : 1 }}

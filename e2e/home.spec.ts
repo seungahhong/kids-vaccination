@@ -32,7 +32,7 @@ async function optionLabels(select: Locator): Promise<string[]> {
     );
 }
 
-test("AC-1.1 저장값 없이 '/'에 진입하면 birthdate-input이 '생년월일' 묶음 안의 연·월·일 선택 상자 3개(모두 고르지 않음)이고, 연도 선택지는 '연도 선택' 다음 2026년~2017년 10개이며 birthdate-submit은 aria-disabled=true다", async ({
+test("AC-1.1 저장값 없이 '/'에 진입하면 birthdate-input이 '생년월일 (필수)' 묶음 안의 연·월·일 선택 상자 3개(모두 고르지 않음, 모두 aria-required)이고, 연도 선택지는 '연도 선택' 다음 2026년~2017년 10개이며 birthdate-submit은 aria-disabled=true다", async ({
   page,
   screenOf,
 }) => {
@@ -42,7 +42,10 @@ test("AC-1.1 저장값 없이 '/'에 진입하면 birthdate-input이 '생년월�
 
   const input = home.getByTestId("birthdate-input");
   await expect(input).toHaveAttribute("role", "group");
-  await expect(input).toHaveAccessibleName("생년월일");
+  await expect(input).toHaveAccessibleName("생년월일 (필수)");
+  for (const select of await input.locator("select").all()) {
+    await expect(select).toHaveAttribute("aria-required", "true");
+  }
   await expect(input.getByRole("combobox")).toHaveCount(3);
   await expect(home.getByRole("combobox", { name: "연도 선택" })).toBeVisible();
   await expect(home.getByRole("combobox", { name: "월 선택" })).toBeVisible();
@@ -263,7 +266,7 @@ test("U-32 헤더에서 언어를 English로 바꾸면 생년월일 선택 상�
 
   await chooseLanguage("en");
   await expect(home.getByTestId("birthdate-input")).toHaveAccessibleName(
-    "Date of birth"
+    "Date of birth (Required)"
   );
   await expect(home.getByTestId("birthdate-input")).toHaveAttribute(
     "lang",

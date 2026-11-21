@@ -293,16 +293,19 @@ function changeEvent(value: string | number) {
 }
 
 describe("U-32 웹 피커(BirthdatePicker.web) 연·월·일 선택 상자", () => {
-  it("U-32 그룹 이름은 '생년월일'이고, 선택값 없이 열면 세 칸이 비어 있고 연도는 2026년~2017년 10개(첫 항목 '연도 선택')다. 연·월만 고르면 null, 일까지 고르면 그 IsoDate(2024-03-15)를 onChange로 올린다", async () => {
+  it("U-32 그룹 이름은 '생년월일 (필수)'이고(R4-04), 세 칸 모두 aria-required이며, 선택값 없이 열면 세 칸이 비어 있고 연도는 2026년~2017년 10개(첫 항목 '연도 선택')다. 연·월만 고르면 null, 일까지 고르면 그 IsoDate(2024-03-15)를 onChange로 올린다", async () => {
     const onChange = jest.fn();
     await renderWithProviders(
       <WebPickerHarness initial={null} onChange={onChange} />
     );
-    expect(await screen.findByLabelText("생년월일")).toHaveProp(
+    expect(await screen.findByLabelText("생년월일 (필수)")).toHaveProp(
       "role",
       "group"
     );
     const [year, month, dayOfMonth] = await findSelects();
+    for (const select of [year, month, dayOfMonth]) {
+      expect(select).toHaveProp("aria-required", true);
+    }
     expect(selectedValues([year, month, dayOfMonth])).toEqual(["", "", ""]);
     expect(optionLabels(year)).toEqual([
       "연도 선택",
@@ -401,6 +404,9 @@ describe("U-32 웹 피커(BirthdatePicker.web) 연·월·일 선택 상자", () 
     expect(optionLabels(month).slice(1, 3)).toEqual(["January", "February"]);
     expect(optionLabels(month).at(-1)).toBe("December");
     expect(optionLabels(dayOfMonth).at(-1)).toBe("31");
-    expect(screen.getByLabelText("Date of birth")).toHaveProp("lang", "en-US");
+    expect(screen.getByLabelText("Date of birth (Required)")).toHaveProp(
+      "lang",
+      "en-US"
+    );
   });
 });

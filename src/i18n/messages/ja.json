@@ -5,7 +5,8 @@
     "schedule": "接種日程",
     "settings": "設定",
     "disclaimer": "この情報は参考用です。正確な内容は小児科医にご相談ください。",
-    "dataSource": "出典：韓国疾病管理庁「2026年国家予防接種指針」、大韓小児青少年科学会の推奨日程 ・ 最終更新：{date}"
+    "dataSource": "出典：韓国疾病管理庁「2026年国家予防接種指針」、大韓小児青少年科学会の推奨日程 ・ 最終更新：{date}",
+    "loading": "読み込み中"
   },
   "home": {
     "title": "赤ちゃん予防接種\nスケジュール管理",
@@ -52,6 +53,8 @@
     "completed": "接種済み",
     "completedSection": "完了した接種",
     "markCompleted": "接種済み",
+    "markedAnnouncement": "{name}：接種済みにしました",
+    "unmarkedAnnouncement": "{name}：接種済みを解除しました",
     "childSelector": "子どもを選択"
   },
   "settings": {

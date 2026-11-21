@@ -282,7 +282,7 @@ describe("U-30 [unit] 헤더 아이 추가", () => {
 
     expect(button).toBeExpanded();
     const panel = within(scope.getByTestId("header-add-panel"));
-    expect(scope.getByTestId("header-add-panel")).toHaveProp("role", "group");
+    expect(scope.getByTestId("header-add-panel")).toHaveProp("role", "region");
     expect(
       panel
         .getAllByTestId(/^(birthdate-picker-button|child-name-input)$/)

@@ -5,7 +5,8 @@
     "schedule": "接种日程",
     "settings": "设置",
     "disclaimer": "此信息仅供参考，准确内容请咨询儿科医生。",
-    "dataSource": "来源：韩国疾病管理厅《2026年国家预防接种指南》、大韩小儿青少年科学会推荐日程 · 最后更新：{date}"
+    "dataSource": "来源：韩国疾病管理厅《2026年国家预防接种指南》、大韩小儿青少年科学会推荐日程 · 最后更新：{date}",
+    "loading": "加载中"
   },
   "home": {
     "title": "宝宝疫苗接种\n日程管理",
@@ -52,6 +53,8 @@
     "completed": "已接种",
     "completedSection": "已完成接种",
     "markCompleted": "已接种",
+    "markedAnnouncement": "{name}：已标记为已接种",
+    "unmarkedAnnouncement": "{name}：已取消已接种标记",
     "childSelector": "选择孩子"
   },
   "settings": {

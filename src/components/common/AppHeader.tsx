@@ -27,6 +27,9 @@ import { LanguageSelector } from "@/components/settings/LanguageSelector";
 import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useEscapeKey, useFocusLeave } from "@/hooks/useDismiss";
+import type { EscapeKeyProps, FocusLeaveProps } from "@/hooks/useDismiss.types";
+import { requestTitleFocus } from "@/hooks/useScreenDocument";
 import { useToggleKeys } from "@/hooks/useToggleKeys";
 import { localeOptionOf } from "@/lib/locale";
 import { oppositeTheme } from "@/lib/themePreference";
@@ -43,8 +46,9 @@ import { FONT_SIZE, MIN_TOUCH_TARGET, RADIUS, SPACING } from "@/theme/tokens";
 //   header-{language|add}-overlay
 //   ├─ header-{language|add}-backdrop: 투명 Pressable. 메뉴 밖을 누르면 닫는다. 보조기기·Tab에서는 숨긴다(aria-hidden, 네이티브
 //   │   focusable false, 웹 tabIndex -1 — RNW Pressable은 focusable false를 tabindex로 옮기지 않아 Tab이 덮개에 먼저 멈췄다)
-//   └─ header-language-panel: 오른쪽 위 메뉴 상자 안의 LanguageSelector(radiogroup, header-locale-option-*)
-//      header-add-panel: 헤더 폭의 메뉴 상자(role group, 이름 = 폼 제목 "아이 추가") 안의 AddChildForm(header-add-child)
+//   └─ header-language-panel: 오른쪽 위 메뉴 상자(role region, 이름 settings.language) 안의 LanguageSelector(radiogroup, header-locale-option-*)
+//      header-add-panel: 헤더 폭의 메뉴 상자(role region, 이름 = 폼 제목 "아이 추가") 안의 AddChildForm(header-add-child)
+//      메뉴 상자는 헤더(banner)·본문(main) 밖의 형제 층이라 이름 붙은 region 랜드마크로 둔다(리뷰 R4-05, axe region 규칙)
 // 덮개 층은 헤더 안이 아니라 헤더의 형제(Screen 프레임의 자식)다. 헤더 안에 두고 헤더 밖으로 내보내면 Android가 부모 영역 밖 터치를
 // 받지 않기 때문이다. 그래서 헤더 높이를 onLayout으로 재서 층의 top으로 쓰고, zIndex로 본문(ScrollView)보다 위에 그린다.
 // 층은 DOM·접근성 순서상 헤더 바로 뒤다. 언어 메뉴는 언어 버튼(줄의 마지막 버튼) 바로 뒤라 disclosure로 둔다(포커스를 옮기지 않음).
@@ -55,6 +59,9 @@ import { FONT_SIZE, MIN_TOUCH_TARGET, RADIUS, SPACING } from "@/theme/tokens";
 // 처리). 터치 영역은 모두 44×44 이상이다.
 // 색: 앱 이름 text on surface, 아이콘은 textSecondary(펼친 메뉴 버튼은 onPrimarySoft on primarySoft), 주사기는 tabActive,
 // 메뉴 그림자는 shadow 토큰(웹은 RNW가 box-shadow로, Android는 elevation)이다.
+// 웹 키보드(리뷰 R4): 헤더는 banner 랜드마크다. 메뉴가 열려 있으면 헤더 줄이나 메뉴 안에서 Escape로 닫고 연 버튼으로 포커스를 돌려준다(R4-01).
+// 포커스가 메뉴 층 밖으로 나가면(메뉴 뒤 Tab, Shift+Tab) 메뉴를 닫는다. 메뉴는 본문을 가리므로 열어 둔 채 본문으로 포커스가 가면
+// 포커스가 메뉴 아래에 가려져 보이지 않는다(R4-02, WCAG 2.4.7). 그 메뉴를 연 버튼으로 돌아가는 이동만은 닫지 않는다(다시 누르면 닫힘).
 
 type HeaderMenu = "language" | "add";
 
@@ -63,15 +70,22 @@ function HeaderOverlay({
   menu,
   top,
   onDismiss,
+  dismissProps,
   children,
 }: {
   readonly menu: HeaderMenu;
   readonly top: number;
   readonly onDismiss: () => void;
+  /** 웹 Escape·포커스 이탈 닫기(useDismiss, 리뷰 R4-01·R4-02). 네이티브는 빈 객체 */
+  readonly dismissProps: EscapeKeyProps & FocusLeaveProps;
   readonly children: ReactNode;
 }): ReactElement {
   return (
-    <View testID={`header-${menu}-overlay`} style={[styles.overlay, { top }]}>
+    <View
+      testID={`header-${menu}-overlay`}
+      {...dismissProps}
+      style={[styles.overlay, { top }]}
+    >
       <Pressable
         testID={`header-${menu}-backdrop`}
         aria-hidden
@@ -126,8 +140,22 @@ export function AppHeader(): ReactElement {
     });
   }, []);
 
+  /** 포커스가 메뉴 층 밖으로 나갔다: 그 메뉴를 연 버튼으로 간 것이 아니면 닫는다(포커스는 사용자가 옮긴 곳에 그대로 둔다) */
+  const leaveMenu = useCallback((next: unknown) => {
+    setMenu((open) => {
+      const trigger =
+        open === "add" ? addButtonRef.current : languageButtonRef.current;
+      return next !== null && next === trigger ? open : null;
+    });
+  }, []);
+  const escapeProps = useEscapeKey(menu === null ? null : dismissMenu);
+  const focusLeaveProps = useFocusLeave(leaveMenu);
+  const overlayProps = { ...escapeProps, ...focusLeaveProps };
+
   const handleAdded = () => {
     setMenu(null);
+    // 메뉴와 함께 제출 버튼이 사라지므로 일정 화면 제목으로 포커스를 옮기게 요청한다(웹, 리뷰 R4-03)
+    requestTitleFocus("screen-schedule");
     router.navigate("/schedule");
   };
 
@@ -174,7 +202,9 @@ export function AppHeader(): ReactElement {
     <>
       <View
         testID="app-header"
+        role="banner"
         onLayout={measureHeader}
+        {...escapeProps}
         style={[
           styles.header,
           {
@@ -237,9 +267,12 @@ export function AppHeader(): ReactElement {
           menu="language"
           top={headerHeight}
           onDismiss={dismissMenu}
+          dismissProps={overlayProps}
         >
           <View
             testID="header-language-panel"
+            role="region"
+            aria-label={t("settings.language")}
             style={[styles.panel, styles.languagePanel, panelColors]}
           >
             <ScrollView style={styles.panelScroll}>
@@ -254,11 +287,16 @@ export function AppHeader(): ReactElement {
         </HeaderOverlay>
       ) : null}
       {menu === "add" ? (
-        <HeaderOverlay menu="add" top={headerHeight} onDismiss={dismissMenu}>
+        <HeaderOverlay
+          menu="add"
+          top={headerHeight}
+          onDismiss={dismissMenu}
+          dismissProps={overlayProps}
+        >
           <View
             ref={addPanelRef}
             testID="header-add-panel"
-            role="group"
+            role="region"
             aria-labelledby={addHeadingId}
             tabIndex={-1}
             style={[styles.panel, styles.addPanel, panelColors]}

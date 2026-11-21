@@ -28,24 +28,20 @@ afterEach(() => {
 });
 
 describe("SEO useDocumentLanguage", () => {
-  it("SEO 웹 구현은 locale이 정해지거나 바뀔 때마다 html lang과 문서 제목(common.appName)을 그 언어로 맞춘다", async () => {
+  it("SEO 웹 구현은 locale이 정해지거나 바뀔 때마다 html lang을 그 언어로 맞추고, 문서 제목은 건드리지 않는다(화면별 제목은 useScreenDocument, 리뷰 R4-03)", async () => {
     const { rerender } = await renderHook(
       (props: { locale: Locale }) => useWebDocumentLanguage(props.locale),
       { initialProps: { locale: "en" } }
     );
 
     expect(fakeDocument.documentElement.lang).toBe("en");
-    expect(fakeDocument.title).toBe("Baby Vaccination Schedule");
+    expect(fakeDocument.title).toBe(TITLE_KO);
 
-    const changes: readonly (readonly [Locale, string])[] = [
-      ["ja", "赤ちゃん予防接種スケジュール"],
-      ["zh", "宝宝疫苗接种日程"],
-      ["ko", TITLE_KO],
-    ];
-    for (const [locale, title] of changes) {
+    const changes: readonly Locale[] = ["ja", "zh", "ko"];
+    for (const locale of changes) {
       await rerender({ locale });
       expect(fakeDocument.documentElement.lang).toBe(locale);
-      expect(fakeDocument.title).toBe(title);
+      expect(fakeDocument.title).toBe(TITLE_KO);
     }
   });
 
@@ -59,7 +55,7 @@ describe("SEO useDocumentLanguage", () => {
 
 // R1-12 (리뷰 라운드 1): I18nProvider는 저장값 하이드레이션 전에는 null을 넘긴다(그때 locale은 기기 감지값이라 깜빡임의 원인).
 describe("R1-12 useDocumentLanguage 하이드레이션 전(null)", () => {
-  it("R1-12 웹 구현은 locale이 null이면 템플릿의 lang(ko)·제목을 그대로 두고, 언어가 정해지면 그 언어로 맞춘다", async () => {
+  it("R1-12 웹 구현은 locale이 null이면 템플릿의 lang(ko)을 그대로 두고, 언어가 정해지면 그 언어로 맞춘다", async () => {
     const { rerender } = await renderHook(
       (props: { locale: Locale | null }) =>
         useWebDocumentLanguage(props.locale),
@@ -72,6 +68,5 @@ describe("R1-12 useDocumentLanguage 하이드레이션 전(null)", () => {
     await rerender({ locale: "ja" });
 
     expect(fakeDocument.documentElement.lang).toBe("ja");
-    expect(fakeDocument.title).toBe("赤ちゃん予防接種スケジュール");
   });
 });

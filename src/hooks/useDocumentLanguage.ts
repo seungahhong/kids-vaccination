@@ -1,6 +1,6 @@
 import type { UseDocumentLanguage } from "./useDocumentLanguage.types";
 
-// 문서 언어 동기화의 네이티브 구현(no-op). iOS·Android에는 <html lang>·document.title이 없어 할 일이 없다.
+// 문서 언어 동기화의 네이티브 구현(no-op). iOS·Android에는 <html lang>이 없어 할 일이 없다.
 // 웹 번들은 Metro가 같은 이름의 useDocumentLanguage.web.ts를 고른다(설계서 §7.1의 플랫폼 확장자 분기).
 // 시그니처는 두 구현이 함께 쓰는 UseDocumentLanguage다(useDocumentLanguage.types.ts).
 

@@ -21,6 +21,7 @@ import { moveFocus } from "@/components/common/moveFocus";
 import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useEscapeKey } from "@/hooks/useDismiss";
 import { formatMessage } from "@/i18n/translate";
 import { childBirthdateNote, childLabel, MAX_CHILDREN } from "@/lib/children";
 import { FONT_SIZE, MIN_TOUCH_TARGET, RADIUS, SPACING } from "@/theme/tokens";
@@ -114,6 +115,8 @@ function ChildRow({
     pendingFocus.current = next ? "question" : "deleteButton";
     setConfirming(next);
   };
+  // 웹: 확인 상자 안에서 Escape는 취소와 같다(포커스는 삭제 버튼으로 돌아감, 리뷰 R4-06)
+  const escapeProps = useEscapeKey(confirming ? () => changeStep(false) : null);
 
   return (
     <View
@@ -142,6 +145,7 @@ function ChildRow({
           role="group"
           aria-labelledby={questionId}
           tabIndex={-1}
+          {...escapeProps}
           style={[
             styles.confirmBox,
             {

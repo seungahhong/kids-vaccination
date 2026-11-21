@@ -59,6 +59,7 @@ e2e/                      Playwright 스펙과 fixture
 - **모든 탭 화면 맨 위에는 `Screen`이 붙이는 `AppHeader`가 있다(FR-15).** 스크롤 밖에 고정되고 SafeArea top 패딩도 헤더가 받는다. 헤더의 테마 스위치·언어 버튼이 화면 본문보다 먼저 Tab 정지점이 되고, 언어 메뉴는 설정과 같은 `LanguageSelector`를 `testIDPrefix="header-locale-option"`으로 쓰고, 헤더 안이 아니라 헤더의 형제 층(`header-language-overlay`, 절대 위치·zIndex)으로 본문 위에 덮인다. 헤더 밖으로 튀어나온 자식은 Android가 터치를 받지 않기 때문이다. 웹에서 Tab에 걸리면 안 되는 `Pressable`은 `focusable={false}`만으로는 부족하고 `tabIndex={-1}`도 준다(RNW).
 - **카드가 다른 구역으로 옮겨 가면 다시 마운트되어 포커스가 사라진다.** 일정 화면은 토글 전에 `focusTargetAfterToggle`로 다음 카드를 정해 두고 커밋 뒤 그 체크박스로 포커스를 옮긴다. 구역 규칙(`sectionSchedule`)을 바꾸면 이 함수의 테스트도 함께 본다. 웹 `role="checkbox"`·`"switch"`는 RNW가 Space를 처리하지 않으므로 `useToggleKeys`를 붙인다.
 - **탭 화면은 언마운트되지 않는다.** 선택된 아이가 바뀔 때 화면 state를 처음으로 돌리려면 effect 대신 `key`를 바꾼다(`ScheduleBody` 참고). 이때 포커스를 가진 컨트롤(아이 칩)은 key 밖에 둔다. 웹에서는 떠난 탭이 DOM에 남으므로 `useBlurInert`가 `inert`를 붙인다.
+- **웹 키보드·화면 낭독기 보강(리뷰 R4).** 헤더 메뉴와 아이 삭제 확인은 `useDismiss`(웹만: Escape, 메뉴 밖으로 나간 포커스)로 닫는다. 헤더는 `banner`, 본문은 `main`, 헤더 메뉴 상자는 이름 붙은 `region`이다. 문서 제목은 보이는 화면이 정하고(`useScreenDocument`, 홈은 앱 이름만), 포커스를 가진 컨트롤이 사라지며 화면이 바뀌는 동작(아이 추가 제출 등)은 이동 전에 `requestTitleFocus("screen-…")`를 불러 대상 화면 제목(h1)으로 포커스를 보낸다. `e2e/axe.spec.ts`가 화면 상태별로 axe(WCAG 2.1 AA + best-practice)를 돌린다. 하단 탭 바만 `region` 규칙에서 빠진다(expo-router 내부 View라 role을 줄 수 없음).
 - **네이티브 화면 낭독기 포커스 이동은 대상의 `onLayout`에서 한다.** `useEffect` 시점에는 새 네이티브 뷰가 아직 없어 이동이 조용히 실패한다(Android 에뮬레이터에서 확인한 결함 V-01). 테스트는 `test-utils/render.tsx`의 `fireLayout`으로 그 시점을 연다.
 
 ## 테스트 작성

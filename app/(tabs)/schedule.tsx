@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import {
+  AccessibilityInfo,
   type HostInstance,
   Platform,
   StyleSheet,
@@ -32,6 +33,8 @@ import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToday } from "@/hooks/useToday";
+import { formatMessage } from "@/i18n/translate";
+import { formatDoseLabel } from "@/lib/format";
 import { isoDateToDate, toIsoDate } from "@/lib/date";
 import type { TranslationKey } from "@/i18n/types";
 import {
@@ -156,6 +159,8 @@ type PendingFocus = {
 /** 선택된 아이의 일정 본문(면책·필터·목록). 필터 state는 아이마다 새로 시작한다(부모의 key) */
 function ScheduleBody({ child }: { readonly child: Child }): ReactElement {
   const { toggleCompleted } = useChildren();
+  const { t, lt, locale } = useI18n();
+  const { tokens } = useTheme();
   const { birthdate } = child;
   const completedIds = useMemo(
     () => new Set(child.completed),
@@ -198,15 +203,39 @@ function ScheduleBody({ child }: { readonly child: Child }): ReactElement {
     moveFocus(checkboxes.current.get(id));
   }, []);
 
+  // 완료 토글 결과 고지(리뷰 R4-03, WCAG 4.1.3): 토글한 카드는 다른 구역으로 옮겨 가고 포커스는 다음 카드로 가므로, 무엇이 바뀌었는지
+  // 따로 알린다. 웹·Android는 아래의 보이지 않는 라이브 영역 글자가 바뀌면 낭독하고, iOS에는 라이브 영역이 없어 같은 문구를
+  // 낭독 대기열 뒤에 보낸다(포커스 이동 낭독을 끊지 않음, ChildrenSection의 삭제 결과 고지와 같은 방식)
+  const [announcement, setAnnouncement] = useState("");
+
   const handleToggleCompleted = useCallback(
     (id: ScheduleItemId) => {
       const target = focusTargetAfterToggle(schedule, filter, completedIds, id);
       pendingFocus.current =
         target === undefined ? null : { target, remounted: target === id };
+      const item = schedule.find((entry) => entry.id === id);
+      if (item !== undefined) {
+        const name = formatDoseLabel(
+          lt(item.vaccination.name),
+          item.dose.doseNumber,
+          locale
+        );
+        const key = completedIds.has(id)
+          ? "schedule.unmarkedAnnouncement"
+          : "schedule.markedAnnouncement";
+        setAnnouncement(formatMessage(t(key), { name }));
+      }
       toggleCompleted(id);
     },
-    [schedule, filter, completedIds, toggleCompleted]
+    [schedule, filter, completedIds, toggleCompleted, t, lt, locale]
   );
+
+  useEffect(() => {
+    if (announcement === "" || Platform.OS !== "ios") return;
+    AccessibilityInfo.announceForAccessibilityWithOptions(announcement, {
+      queue: true,
+    });
+  }, [announcement]);
 
   useEffect(() => {
     const pending = pendingFocus.current;
@@ -258,6 +287,13 @@ function ScheduleBody({ child }: { readonly child: Child }): ReactElement {
           </Fragment>
         ))}
       </View>
+      <Text
+        testID="schedule-announcement"
+        accessibilityLiveRegion="polite"
+        style={[styles.visuallyHidden, { color: tokens.text }]}
+      >
+        {announcement}
+      </Text>
     </>
   );
 }
@@ -272,4 +308,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   emptyPanel: { minHeight: MIN_TOUCH_TARGET },
+  // 화면에는 보이지 않지만 접근성 트리에는 남는 1×1 영역(라이브 영역 낭독용). opacity 0·display none은 낭독기가 건너뛴다
+  visuallyHidden: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    overflow: "hidden",
+    left: -10000,
+  },
 });
