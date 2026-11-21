@@ -86,6 +86,17 @@ function clearedAccessibilityMocks() {
   return { announceWithOptions, sendEvent };
 }
 
+describe("U-33 아이 줄의 생년월일", () => {
+  it("U-33 이름 있는 '첫째' 줄에만 '생년월일: 2024-01-31'(child-row-birthdate)이 있고, 이름 없는 아이 줄은 이름표가 곧 생년월일이라 따로 없다", async () => {
+    await renderSection();
+
+    expect(rowOf("첫째").getByTestId("child-row-birthdate")).toHaveTextContent(
+      "생년월일: 2024-01-31"
+    );
+    expect(rowOf("2026-04-30").queryByTestId("child-row-birthdate")).toBeNull();
+  });
+});
+
 describe("AC-21.5 [unit] 아이 목록과 삭제 확인", () => {
   it("AC-21.5 [unit] 아이 2명이면 아이 수 '저장된 아이 2명 (최대 10명)'과 이름표 '첫째'·'2026-04-30'(이름 없으면 생년월일) 줄이 있고, 줄마다 삭제 버튼 이름이 '{이름표} 삭제'다", async () => {
     const count = await renderSection();

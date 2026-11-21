@@ -12,6 +12,7 @@ import {
 
 // 여러 아이 E2E 판정 테스트: FR-16(US-21, U-26~U-30). 제목은 AC ID로 시작한다(PRD §7.3 집계 규칙).
 // - 아이는 최대 10명이다. 생년월일은 필수, 이름은 선택이고, 화면 이름표는 이름이 있으면 이름, 없으면 생년월일이다.
+//   이름이 있으면 홈 바로가기·일정 아이 선택 아래·설정 아이 줄에 "생년월일: YYYY-MM-DD" 줄도 보인다(U-33).
 // - 아이가 없으면 홈 화면에 추가 폼(생년월일 → 이름)이 있고, 한 명이라도 있으면 홈에는 목록만, 추가는 헤더 "아이 추가" 메뉴에서 한다.
 // - 저장은 웹 localStorage의 vaccination-app-children 키 하나(버전이 붙은 JSON)다. 아이를 지우면 저장값에서도 빠지고, 마지막 아이를
 //   지우면 키 자체가 없어진다.
@@ -30,7 +31,7 @@ function chip(scope: Locator, name: string): Locator {
   return scope.getByRole("radio", { name, exact: true });
 }
 
-test("AC-21.1 아이가 없으면 홈 추가 폼에 생년월일 2024-01-31(필수)과 이름 '민준'(선택)을 넣고 일정 확인하기를 누르면 일정 화면의 아이 칩 '민준'이 checked이고, 홈은 폼 대신 '민준 일정 바로 보기' 목록이 되며 localStorage에 이름·생년월일이 JSON으로 저장된다", async ({
+test("AC-21.1 아이가 없으면 홈 추가 폼에 생년월일 2024-01-31(필수)과 이름 '민준'(선택)을 넣고 일정 확인하기를 누르면 일정 화면의 아이 칩 '민준'이 checked이고, 홈은 폼 대신 '민준 생년월일: 2024-01-31 일정 바로 보기' 목록이 되며(U-33) localStorage에 이름·생년월일이 JSON으로 저장된다", async ({
   page,
   screenOf,
 }) => {
@@ -59,7 +60,10 @@ test("AC-21.1 아이가 없으면 홈 추가 폼에 생년월일 2024-01-31(필�
   await page.getByRole("tab", { name: "홈", exact: true }).click();
   await expect(home.getByTestId("home-add-child")).toHaveCount(0);
   await expect(
-    home.getByRole("button", { name: "민준 일정 바로 보기", exact: true })
+    home.getByRole("button", {
+      name: "민준 생년월일: 2024-01-31 일정 바로 보기",
+      exact: true,
+    })
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -120,6 +124,43 @@ test("AC-21.2 아이가 있으면 헤더 '아이 추가'를 눌러 본문 위에
     "첫째",
     "2026-04-30",
   ]);
+});
+
+test("U-33 이름 있는 아이 '첫째'(2024-01-31)는 홈 바로가기·일정 아이 선택 아래·설정 아이 줄에 '생년월일: 2024-01-31'이 보이고, 이름 없는 아이(이름표가 곧 생년월일)는 따로 보이지 않는다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  await seed({ [CHILDREN_KEY]: TWO_CHILDREN });
+  await page.goto("/");
+
+  const home = screenOf("home");
+  await expect(home.getByTestId("child-shortcut-birthdate")).toHaveText([
+    "생년월일: 2024-01-31",
+  ]);
+  await expect(
+    home.getByRole("button", {
+      name: "첫째 생년월일: 2024-01-31 일정 바로 보기",
+      exact: true,
+    })
+  ).toBeVisible();
+
+  await page.getByRole("tab", { name: "접종 일정", exact: true }).click();
+  const schedule = screenOf("schedule");
+  await expect(chip(schedule, "2026-04-30")).toHaveAttribute(
+    "aria-checked",
+    "true"
+  );
+  await expect(schedule.getByTestId("schedule-birthdate")).toHaveCount(0);
+  await chip(schedule, "첫째").click();
+  await expect(schedule.getByTestId("schedule-birthdate")).toHaveText(
+    "생년월일: 2024-01-31"
+  );
+
+  await page.getByRole("tab", { name: "설정", exact: true }).click();
+  await expect(
+    screenOf("settings").getByTestId("child-row-birthdate")
+  ).toHaveText(["생년월일: 2024-01-31"]);
 });
 
 test("AC-21.3 아이 2명이면 일정 칩으로 아이를 바꿀 때마다 그 아이의 생년월일로 계산한 일정과 그 아이의 완료 기록이 보이고, 선택이 저장되어 새로고침 뒤에도 유지된다", async ({

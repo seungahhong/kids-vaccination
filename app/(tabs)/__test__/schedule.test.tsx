@@ -607,6 +607,32 @@ const PICK_EVENT = { nativeEvent: { timestamp: 0, utcOffset: 0 } };
 
 // R1-06: 생년월일이 바뀌면 일정 화면의 필터·카드 펼침이 처음 상태로 돌아간다(원본은 진입마다 "전체").
 // 탭 화면은 언마운트되지 않으므로 생년월일을 key로 본문을 다시 마운트한다. 홈의 날짜 입력은 iOS 피커 모달로 한다(AC-2.2와 같은 경로).
+describe("U-33 일정 화면의 생년월일", () => {
+  it("U-33 이름 있는 아이 '첫째'(2024-01-31)가 선택돼 있으면 아이 선택 아래 '생년월일: 2024-01-31'이 보이고, 이름 없는 아이(칩이 곧 생년월일)를 고르면 그 줄이 사라진다", async () => {
+    const schedule = await openSchedule({
+      [STORAGE_KEYS.children]: JSON.stringify({
+        v: 1,
+        activeId: "c1",
+        children: [
+          { id: "c1", name: "첫째", birthdate: "2024-01-31", completed: [] },
+          { id: "c2", birthdate: "2026-04-30", completed: [] },
+        ],
+      }),
+    });
+
+    expect(schedule.getByTestId("schedule-birthdate")).toHaveTextContent(
+      "생년월일: 2024-01-31"
+    );
+
+    await fireEvent.press(schedule.getByRole("radio", { name: "2026-04-30" }));
+
+    expect(
+      schedule.getByRole("radio", { name: "2026-04-30", checked: true })
+    ).toBeOnTheScreen();
+    expect(schedule.queryByTestId("schedule-birthdate")).toBeNull();
+  });
+});
+
 describe("R1-06 아이가 바뀌면 일정 필터·카드 펼침 초기화", () => {
   it("R1-06 생년월일 2026-04-30 일정에서 '지남'을 고르고 bcg-1을 펼친 뒤 헤더 '아이 추가'로 2026-10-18 아이를 더하면 그 아이가 선택되고 일정 필터는 '전체'·카드 41개이며 bcg-1은 접혀 있다(v1.7: 홈 대신 헤더에서 추가, U-30)", async () => {
     const schedule = await openSchedule({

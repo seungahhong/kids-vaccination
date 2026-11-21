@@ -10,6 +10,7 @@ import type {
 
 // 여러 아이 순수 모듈(FR-16, U-26~U-29). React·RN을 import하지 않는다(ESLint 순수 레이어).
 // - 아이는 id로 구분한다(같은 생년월일의 쌍둥이도 따로). 이름은 선택이고, 화면 표시는 이름이 있으면 이름, 없으면 생년월일이다(childLabel).
+//   이름이 있으면 생년월일도 따로 한 줄 보여 준다(childBirthdateNote).
 // - 최대 MAX_CHILDREN명이다. 추가한 아이가 지금 일정을 보여 주는 아이(activeId)가 된다.
 // - 접종 완료 기록(FR-14)은 아이마다 따로 들고 있다. 아이를 지우면 그 기록도 함께 사라진다.
 // 저장 형식(U-29): 키 하나(vaccination-app-children)에 버전이 붙은 JSON이다. 다른 키는 원시 문자열이지만, 이름에 구분자 문자가
@@ -42,6 +43,16 @@ export function normalizeChildName(raw: string): string | undefined {
 /** 화면에 보이는 아이 이름표: 이름이 있으면 이름, 없으면 생년월일(U-27) */
 export function childLabel(child: Pick<Child, "name" | "birthdate">): string {
   return child.name ?? child.birthdate;
+}
+
+/**
+ * 이름표 옆에 따로 보여 줄 생년월일: 이름이 있으면 생년월일, 없으면 이름표가 이미 생년월일이므로 null.
+ * 홈 바로가기·일정 아이 선택·설정 아이 줄이 "생년월일: YYYY-MM-DD" 줄로 쓴다
+ */
+export function childBirthdateNote(
+  child: Pick<Child, "name" | "birthdate">
+): IsoDate | null {
+  return child.name === undefined ? null : child.birthdate;
 }
 
 /** 일정을 보여 줄 아이: activeId의 아이, 없으면 첫 아이, 아이가 없으면 null */

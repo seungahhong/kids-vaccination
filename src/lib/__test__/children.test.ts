@@ -2,6 +2,7 @@ import {
   activeChildOf,
   addChild,
   canAddChild,
+  childBirthdateNote,
   childLabel,
   createChildId,
   decodeChildren,
@@ -58,6 +59,11 @@ describe("U-27 아이 이름표와 이름 정리", () => {
   it("U-27 childLabel은 이름이 있으면 이름, 없으면 생년월일이다", () => {
     expect(childLabel(FIRST)).toBe("첫째");
     expect(childLabel(SECOND)).toBe("2026-04-30");
+  });
+
+  it("childBirthdateNote는 이름이 있으면 생년월일, 없으면(이름표가 이미 생년월일) null이다", () => {
+    expect(childBirthdateNote(FIRST)).toBe("2024-01-31");
+    expect(childBirthdateNote(SECOND)).toBeNull();
   });
 
   it("U-26 normalizeChildName은 앞뒤 공백을 지우고, 비면 undefined, MAX_CHILD_NAME_LENGTH(20)자를 넘으면 자른다", () => {

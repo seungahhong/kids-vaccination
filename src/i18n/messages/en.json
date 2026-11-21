@@ -33,7 +33,7 @@
   },
   "schedule": {
     "title": "Vaccination Schedule",
-    "birthdate": "Date of Birth",
+    "birthdate": "Date of birth",
     "filterAll": "All",
     "filterUpcoming": "Upcoming",
     "filterPast": "Past",
@@ -60,7 +60,7 @@
     "darkMode": "Dark Mode",
     "language": "Language",
     "babyInfo": "Baby Info",
-    "birthdate": "Date of Birth",
+    "birthdate": "Date of birth",
     "edit": "Edit",
     "reset": "Delete Birthdate",
     "resetConfirm": "Delete your baby's birthdate?",

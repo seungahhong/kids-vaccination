@@ -304,8 +304,49 @@ describe("AC-3.1 [unit] 저장된 아이 바로가기로 일정 이동", () => {
   });
 });
 
+describe("U-33 홈 바로가기의 생년월일", () => {
+  it("U-33 이름 있는 아이 '첫째'(2024-01-31)와 이름 없는 아이(2026-04-30)가 있으면 '첫째' 바로가기만 '생년월일: 2024-01-31' 줄이 있고, 접근 이름은 '첫째 생년월일: 2024-01-31 일정 바로 보기'·'2026-04-30 일정 바로 보기'다", async () => {
+    await seedStorage({
+      [STORAGE_KEYS.children]: encodeChildren({
+        activeId: null,
+        children: [
+          {
+            id: childId("c1"),
+            name: "첫째",
+            birthdate: toIsoDate(new Date(2024, 0, 31)),
+            completed: [],
+          },
+          {
+            id: childId("c2"),
+            birthdate: toIsoDate(new Date(2026, 3, 30)),
+            completed: [],
+          },
+        ],
+      }),
+    });
+    await renderHome();
+
+    const shortcuts = screen.getAllByTestId("child-shortcut");
+    expect(shortcuts).toHaveLength(2);
+    const [first, second] = shortcuts;
+    if (!first || !second) throw new Error("바로가기가 2개가 아니다");
+    expect(
+      within(first).getByTestId("child-shortcut-birthdate")
+    ).toHaveTextContent("생년월일: 2024-01-31");
+    expect(within(second).queryByTestId("child-shortcut-birthdate")).toBeNull();
+    expect(
+      screen.getByRole("button", {
+        name: "첫째 생년월일: 2024-01-31 일정 바로 보기",
+      })
+    ).toBe(first);
+    expect(
+      screen.getByRole("button", { name: "2026-04-30 일정 바로 보기" })
+    ).toBe(second);
+  });
+});
+
 describe("AC-21.1 [unit] 이름을 넣어 아이 추가", () => {
-  it("AC-21.1 [unit] 이름 '  민준 '·생년월일 2024-01-31로 추가하면 일정 칩·홈 바로가기 이름표가 '민준'이고 저장값 이름은 '민준'이며, 홈으로 돌아오면 폼 대신 목록이 있다", async () => {
+  it("AC-21.1 [unit] 이름 '  민준 '·생년월일 2024-01-31로 추가하면 일정 칩·홈 바로가기 이름표가 '민준'(바로가기는 생년월일 줄 포함, U-33)이고 저장값 이름은 '민준'이며, 홈으로 돌아오면 폼 대신 목록이 있다", async () => {
     jest.replaceProperty(Platform, "OS", "android");
     await renderHome();
     expect(screen.getByLabelText("이름 (선택)")).toBe(
@@ -333,7 +374,9 @@ describe("AC-21.1 [unit] 이름을 넣어 아이 추가", () => {
     await fireEvent.press(homeTab);
     const home = within(await screen.findByTestId("screen-home"));
     expect(
-      home.getByRole("button", { name: "민준 일정 바로 보기" })
+      home.getByRole("button", {
+        name: "민준 생년월일: 2024-01-31 일정 바로 보기",
+      })
     ).toBeOnTheScreen();
     expect(home.queryByTestId("home-add-child")).toBeNull();
   });

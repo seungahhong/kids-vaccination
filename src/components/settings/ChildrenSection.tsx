@@ -22,13 +22,14 @@ import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { formatMessage } from "@/i18n/translate";
-import { childLabel, MAX_CHILDREN } from "@/lib/children";
+import { childBirthdateNote, childLabel, MAX_CHILDREN } from "@/lib/children";
 import { FONT_SIZE, MIN_TOUCH_TARGET, RADIUS, SPACING } from "@/theme/tokens";
 import type { Child, ChildId } from "@/types";
 
 // 아기 정보: 저장된 아이 목록과 아이별 삭제(FR-10·FR-16, U-28). v1.6까지의 BabyInfoSection(생년월일 하나 + "생년월일 삭제")을 대신한다.
 //   settings-children-count: "저장된 아이 N명 (최대 10명)". polite 라이브 영역이라 삭제 결과(줄어든 수)가 화면 낭독기에 알려진다(R2-06과 같은 방식)
-//   아이마다 child-row: 이름표(child-row-label, 이름이 있으면 이름, 없으면 생년월일) + child-delete("삭제", 접근 이름 "{이름표} 삭제")
+//   아이마다 child-row: 이름표(child-row-label, 이름이 있으면 이름, 없으면 생년월일)
+//     + (이름이 있으면) "생년월일: YYYY-MM-DD"(child-row-birthdate) + child-delete("삭제", 접근 이름 "{이름표} 삭제")
 //     → 누르면 같은 줄이 확인 상자(role="group", 이름 = 확인 문구 "{이름표} 정보를 삭제할까요?") + child-delete-confirm / child-delete-cancel
 // 확인을 누르면 그 아이와 완료 기록을 지운다(ChildrenContext.removeChild → 저장소에서도 삭제, 마지막 아이면 키 자체를 지움).
 // 포커스(리뷰 R1-03·V-01 규칙): 열면 확인 문구(웹은 확인 상자), 취소하면 그 줄의 삭제 버튼으로 옮긴다. 대상이 새로 마운트되므로
@@ -37,7 +38,7 @@ import type { Child, ChildId } from "@/types";
 // 결과 고지: Android(accessibilityLiveRegion)·웹(aria-live)은 아이 수 문구가 바뀌면 스스로 알리고, iOS에는 라이브 영역이 없어
 // 같은 문구를 화면 낭독기 고지로 보낸다(announceResult, iOS만). Alert는 쓰지 않는다(웹 미지원, AC-14.5).
 // 색은 CONTRAST_PAIRS 등록 쌍만 쓴다: 삭제 버튼 danger on surface, 확인 상자 dangerText on dangerSurface, 확인 onDanger on danger,
-// 취소 chipText on chipBackground, 이름표 text on surface, 아이 수 textSecondary on surface.
+// 취소 chipText on chipBackground, 이름표 text on surface, 아이 수·생년월일 textSecondary on surface.
 
 /** 삭제 결과를 VoiceOver에 알린다(iOS만). queue: 바로 앞에서 옮긴 포커스 낭독을 끊지 않고 뒤에 잇는다 */
 function announceResult(message: string): void {
@@ -76,6 +77,7 @@ function ChildRow({
   // 사용자가 단계를 바꿨을 때만 포커스를 옮긴다(첫 렌더에서는 옮기지 않는다)
   const pendingFocus = useRef<RowFocusTarget | null>(null);
   const label = childLabel(child);
+  const birthdate = childBirthdateNote(child);
   const { id } = child;
 
   const setDeleteButton = useCallback(
@@ -125,6 +127,14 @@ function ChildRow({
       >
         {label}
       </Text>
+      {birthdate === null ? null : (
+        <Text
+          testID="child-row-birthdate"
+          style={[styles.birthdate, { color: tokens.textSecondary }]}
+        >
+          {`${t("settings.birthdate")}: ${birthdate}`}
+        </Text>
+      )}
       {confirming ? (
         <View
           ref={confirmBoxRef}
@@ -272,6 +282,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   label: { fontSize: FONT_SIZE.md, fontWeight: "600" },
+  birthdate: { fontSize: FONT_SIZE.sm },
   deleteButton: {
     minHeight: MIN_TOUCH_TARGET,
     flexDirection: "row",
