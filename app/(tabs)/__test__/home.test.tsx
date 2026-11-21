@@ -12,6 +12,7 @@ import {
   deferStorage,
   flushRouterMacrotask,
   getTabButtons,
+  propsOf,
   renderApp,
   seedStorage,
 } from "../../../test-utils/render";
@@ -434,5 +435,22 @@ describe("R1-02 홈 본문 스크롤", () => {
     ]) {
       expect(closestScrollView(element)).toBe(scrollView);
     }
+  });
+});
+
+describe("iOS 키보드 색(app.json userInterfaceStyle 'light', U-24)", () => {
+  it("이름 입력 키보드는 OS 색 모드가 아니라 앱 테마를 따른다: 저장값이 없으면 라이트 → 'light'", async () => {
+    await renderHome();
+    expect(
+      propsOf(screen.getByTestId("child-name-input")).keyboardAppearance
+    ).toBe("light");
+  });
+
+  it("이름 입력 키보드는 앱 테마를 따른다: 저장값 다크 → 'dark'", async () => {
+    await seedStorage({ [STORAGE_KEYS.theme]: "dark" });
+    await renderHome();
+    expect(
+      propsOf(screen.getByTestId("child-name-input")).keyboardAppearance
+    ).toBe("dark");
   });
 });

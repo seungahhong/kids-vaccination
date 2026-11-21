@@ -6,15 +6,18 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "kidsvaccination",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.kidsvaccination"
+      "bundleIdentifier": "io.github.seungahhong.kidsvaccination",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.example.kidsvaccination",
+      "package": "io.github.seungahhong.kidsvaccination",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0f766e",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -30,7 +33,16 @@
       "expo-router",
       "expo-status-bar",
       "@react-native-community/datetimepicker",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#fafaf9"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

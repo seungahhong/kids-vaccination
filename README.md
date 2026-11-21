@@ -137,7 +137,6 @@ public/index.html         웹 HTML 템플릿(SEO 메타·JSON-LD)
   - 헤더가 노치·상태 표시줄 영역을 피해 놓이는지
 - 남은 일:
   - iOS 실기기 확인(네이티브 날짜 피커, 다크 모드 시각 확인, VoiceOver)
-  - 배포 전 `app.json`의 번들 ID `com.example.kidsvaccination`을 실제 값으로 바꾸기
-  - EAS 등 네이티브 배포 빌드 설정(아직 없음)
+  - App Store 제출: `eas.json`(production 프로필, 빌드 번호는 EAS 원격 관리)이 준비되어 있습니다. 스토어 스크린샷은 저장소에 두지 않고(`store/`는 gitignore 대상) App Store Connect에 직접 올립니다. Apple 개발자 계정 가입 후 `eas build -p ios --profile production` → `eas submit -p ios`로 올립니다
   - `npm audit`의 high 경고: Expo·Metro·Jest 도구 체인의 간접 의존성에서 나옵니다. 고치려면 SDK를 다운그레이드해야 해서 보류 중입니다
 - 알려진 제한: 생년월일은 (올해 − 9)년 1월 1일 이후만 입력할 수 있습니다. 그보다 일찍 태어난 아이(2026년 기준 2016년 12월 31일 이전 출생)의 일정은 볼 수 없습니다.

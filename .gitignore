@@ -48,3 +48,6 @@ test-results/
 # Claude Code local artifacts
 .claude/plans/
 .claude/reports/
+
+# App Store screenshots (uploaded to App Store Connect by hand, not used by the build)
+store/

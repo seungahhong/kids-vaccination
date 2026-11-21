@@ -73,7 +73,7 @@ export function AddChildForm({
   onHeadingLayout,
 }: AddChildFormProps): ReactElement {
   const { t } = useI18n();
-  const { tokens } = useTheme();
+  const { tokens, scheme } = useTheme();
   const { canAddChild, addChild } = useChildren();
   // 의존성은 Date identity가 아니라 날짜 문자열(설계서 §5.6·§5.9)
   const todayKey = toIsoDate(useToday());
@@ -130,6 +130,9 @@ export function AddChildForm({
           maxLength={MAX_CHILD_NAME_LENGTH}
           placeholder={t("home.childNamePlaceholder")}
           placeholderTextColor={tokens.textSecondary}
+          // iOS 키보드는 기본으로 OS 색 모드를 따른다. app.json userInterfaceStyle이 "light"라 OS 다크여도 라이트이므로,
+          // 앱 테마(U-24)를 직접 넘겨 다크 테마에서도 키보드가 화면과 같은 색이 되게 한다(날짜 휠의 themeVariant와 같은 규칙)
+          keyboardAppearance={scheme}
           editable={canAddChild}
           style={[
             styles.nameInput,
