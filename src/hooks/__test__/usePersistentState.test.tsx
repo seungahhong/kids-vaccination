@@ -2,20 +2,30 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
 import { usePersistentState } from "@/hooks/usePersistentState";
+import { isIsoDate } from "@/lib/date";
 import {
-  birthdateCodec,
   type Codec,
   localeCodec,
   STORAGE_KEYS,
   type StorageKey,
   themeCodec,
 } from "@/lib/storage";
+import type { IsoDate } from "@/types";
 
 import {
   deferStorage,
   flushMacrotask,
   seedStorage,
 } from "../../../test-utils/render";
+
+/**
+ * 원시 'YYYY-MM-DD' 코덱(v1.6까지의 birthdateCodec과 같은 동작). 훅은 키·코덱에 무관하므로 예전 생년월일 키를 예시로 쓴다.
+ * 제품의 생년월일은 v1.7부터 아이 목록 JSON(ChildrenContext) 안에 있다(FR-16)
+ */
+const birthdateCodec: Codec<IsoDate> = {
+  decode: (raw) => (isIsoDate(raw) ? raw : null),
+  encode: (value) => value,
+};
 
 // 지원(설계서 §5.6·§6.1): usePersistentState는 마운트 시 1회 읽고, 읽기가 끝나면 isReady=true가 된다.
 describe("G-5 usePersistentState 하이드레이션", () => {

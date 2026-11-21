@@ -3,10 +3,10 @@
 // 아래 함수는 호출되지 않는다(타입 검사 전용). 양성 줄은 같은 API의 올바른 사용이 통과함을 보인다.
 import { router } from "expo-router";
 
-import type { BirthdateContextValue } from "@/contexts/BirthdateContext";
+import type { ChildrenContextValue } from "@/contexts/ChildrenContext";
 import type { I18nContextValue } from "@/contexts/I18nContext";
 import { lightTokens } from "@/theme/tokens";
-import type { IsoDate } from "@/types";
+import type { ChildId, IsoDate } from "@/types";
 
 /** 번역 키는 ko.json 기반 2단계 dot-path 유니온(TranslationKey)만 받는다 */
 export function translationKeyAssertions({ t }: I18nContextValue): string {
@@ -37,12 +37,24 @@ export function typedRoutesAssertions(): void {
   router.push("/chat");
 }
 
-/** 생년월일은 브랜드 타입 IsoDate만 받는다(toIsoDate/isIsoDate/isSelectableBirthdate로만 만든다) */
+/** 아이 생년월일은 브랜드 타입 IsoDate만 받는다(toIsoDate/isIsoDate/isSelectableBirthdate로만 만든다, FR-16 addChild) */
 export function birthdateAssertions(
-  { setBirthdate }: BirthdateContextValue,
+  { addChild }: ChildrenContextValue,
   iso: IsoDate
 ): void {
-  setBirthdate(iso);
+  addChild({ birthdate: iso });
+  addChild({ name: "첫째", birthdate: iso });
   // @ts-expect-error -- 브랜드 없는 문자열 리터럴은 IsoDate가 아니다
-  setBirthdate("2024-01-31");
+  addChild({ birthdate: "2024-01-31" });
+}
+
+/** 아이 id는 브랜드 타입 ChildId만 받는다(isChildId/createChildId로만 만든다, FR-16) */
+export function childIdAssertions(
+  { selectChild, removeChild }: ChildrenContextValue,
+  id: ChildId
+): void {
+  selectChild(id);
+  removeChild(id);
+  // @ts-expect-error -- 브랜드 없는 문자열은 ChildId가 아니다
+  selectChild("c1");
 }

@@ -91,6 +91,41 @@ export async function readStorage(
   return page.evaluate((k) => window.localStorage.getItem(k), key);
 }
 
+/** 저장된 아이 목록 키(FR-16, U-29: 버전이 붙은 JSON) */
+export const CHILDREN_KEY = "vaccination-app-children";
+
+/** localStorage의 아이 목록을 JSON으로 읽는다(없으면 null) */
+export async function readChildren(page: Page): Promise<unknown> {
+  const raw = await readStorage(page, CHILDREN_KEY);
+  return raw === null ? null : JSON.parse(raw);
+}
+
+/**
+ * 웹 생년월일 피커(연·월·일 <select> 3개, v1.8 U-32)에서 'YYYY-MM-DD'를 고른다. scope는 피커를 담은 범위(홈 화면·헤더 추가 메뉴)다.
+ * 앞 칸이 뒤 칸의 선택지를 정하므로(올해는 이번 달까지, 그 달의 날 수 등) 연 → 월 → 일 순서로 고른다. 값(option value)으로 고른다.
+ * v1.7까지의 <input type="date">.fill('YYYY-MM-DD')를 대신한다.
+ */
+export async function fillBirthdate(
+  scope: Locator,
+  iso: string
+): Promise<void> {
+  const [year, month, day] = iso.split("-").map((part) => String(Number(part)));
+  await scope.getByTestId("birthdate-year").selectOption({ value: year ?? "" });
+  await scope
+    .getByTestId("birthdate-month")
+    .selectOption({ value: month ?? "" });
+  await scope.getByTestId("birthdate-day").selectOption({ value: day ?? "" });
+}
+
+/** 웹 생년월일 피커 세 칸이 보여 주는 값(연·월·일 option value, 고르지 않은 칸은 "") */
+export async function birthdateParts(scope: Locator): Promise<string[]> {
+  return Promise.all(
+    ["birthdate-year", "birthdate-month", "birthdate-day"].map((testId) =>
+      scope.getByTestId(testId).inputValue()
+    )
+  );
+}
+
 /** AC-17.2가 허용하는 origin: 개발 서버(http)와 그 HMR 소켓(ws) */
 const LOCAL_ORIGINS = ["http://localhost:8081", "ws://localhost:8081"];
 

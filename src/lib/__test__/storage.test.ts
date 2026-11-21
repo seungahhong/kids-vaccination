@@ -1,8 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { encodeChildren, isChildId } from "@/lib/children";
 import { toIsoDate } from "@/lib/date";
 import {
-  birthdateCodec,
+  childrenCodec,
+  commitChildrenMigration,
+  type KeyValueStore,
+  loadChildren,
   localeCodec,
   readValue,
   removeValue,
@@ -10,16 +14,37 @@ import {
   themeCodec,
   writeValue,
 } from "@/lib/storage";
+import type { ChildId, ChildrenState } from "@/types";
 
-// AC-18.1 (FR-01·08·09·10 · US-18): 저장소 수준. 빈 AsyncStorage mock에 키 3개가 원시 문자열로 저장된다(JSON 따옴표 없음, 설계서 §4.3).
-describe("AC-18.1 저장소 API writeValue — 키 3개·원시 문자열", () => {
-  it("AC-18.1 writeValue 3종이 모두 true를 반환하고 getAllKeys가 정확히 키 3개를 반환하며 값은 원시 문자열이다", async () => {
+/** 유효한 아이 id(테스트 입력) */
+function childId(value: string): ChildId {
+  if (!isChildId(value)) throw new Error(`아이 id 형식이 아니다: ${value}`);
+  return value;
+}
+
+/** 이름 있는 아이 1명(2024-01-31, hepb-1 완료) */
+const ONE_CHILD: ChildrenState = {
+  activeId: childId("c1"),
+  children: [
+    {
+      id: childId("c1"),
+      name: "첫째",
+      birthdate: toIsoDate(new Date(2024, 0, 31)),
+      completed: ["hepb-1"],
+    },
+  ],
+};
+
+// AC-18.1 (FR-01·08·09·10·16 · US-18): 저장소 수준. 빈 AsyncStorage mock에 키 3개가 저장된다. 테마·언어는 원시 문자열(설계서 §4.3),
+// 아이 목록은 버전이 붙은 JSON이다(v1.7 U-29, v1.6까지는 생년월일 원시 문자열 키).
+describe("AC-18.1 저장소 API writeValue — 키 3개", () => {
+  it("AC-18.1 writeValue 3종이 모두 true를 반환하고 getAllKeys가 정확히 키 3개를 반환하며 테마·언어는 원시 문자열, 아이 목록은 JSON이다", async () => {
     expect(await AsyncStorage.getAllKeys()).toEqual([]);
 
-    const birthdateWritten = await writeValue(
-      STORAGE_KEYS.birthdate,
-      birthdateCodec,
-      toIsoDate(new Date(2024, 0, 31))
+    const childrenWritten = await writeValue(
+      STORAGE_KEYS.children,
+      childrenCodec,
+      ONE_CHILD
     );
     const themeWritten = await writeValue(
       STORAGE_KEYS.theme,
@@ -32,7 +57,7 @@ describe("AC-18.1 저장소 API writeValue — 키 3개·원시 문자열", () =
       "en"
     );
 
-    expect([birthdateWritten, themeWritten, localeWritten]).toEqual([
+    expect([childrenWritten, themeWritten, localeWritten]).toEqual([
       true,
       true,
       true,
@@ -40,50 +65,52 @@ describe("AC-18.1 저장소 API writeValue — 키 3개·원시 문자열", () =
 
     const keys = [...(await AsyncStorage.getAllKeys())].sort();
     expect(keys).toEqual([
-      "vaccination-app-birthdate",
+      "vaccination-app-children",
       "vaccination-app-locale",
       "vaccination-app-theme",
     ]);
 
-    expect(await AsyncStorage.getItem("vaccination-app-birthdate")).toBe(
-      "2024-01-31"
+    expect(await AsyncStorage.getItem("vaccination-app-children")).toBe(
+      encodeChildren(ONE_CHILD)
     );
     expect(await AsyncStorage.getItem("vaccination-app-theme")).toBe("dark");
     expect(await AsyncStorage.getItem("vaccination-app-locale")).toBe("en");
   });
 
-  it("AC-18.1 STORAGE_KEYS는 birthdate/theme/locale 3개이며 값이 vaccination-app-* 문자열이다", () => {
+  it("AC-18.1 STORAGE_KEYS는 theme/locale/children 3개 + 이전용 예전 키 birthdate·completed 2개이며 값이 vaccination-app-* 문자열이다", () => {
     expect(STORAGE_KEYS).toEqual({
       birthdate: "vaccination-app-birthdate",
       theme: "vaccination-app-theme",
       locale: "vaccination-app-locale",
+      completed: "vaccination-app-completed",
+      children: "vaccination-app-children",
     });
   });
 });
 
 // AC-18.4 (US-18) 코덱 수준: 손상 값은 decode가 null을 돌려주고 readValue는 "값 없음"으로 읽으며 덮어쓰지 않는다(설계서 §4.3).
 describe("AC-18.4 코덱 decode — 손상 값은 null", () => {
-  it.each(["2024-02-30", "abc", "", "2024-1-31", "20240131"])(
-    "AC-18.4 birthdateCodec.decode(%j)는 null이다",
+  it.each(["2024-01-31", "abc", "", "{}", '{"v":1}'])(
+    "AC-18.4 childrenCodec.decode(%j)는 null이다(아이 목록 JSON이 아님)",
     (raw) => {
-      expect(birthdateCodec.decode(raw)).toBeNull();
+      expect(childrenCodec.decode(raw)).toBeNull();
     }
   );
 
-  it("AC-18.4 birthdateCodec은 유효한 'YYYY-MM-DD'를 그대로 돌려주고 encode는 원시 문자열이다", () => {
-    const iso = toIsoDate(new Date(2024, 0, 31));
-    expect(birthdateCodec.decode("2024-01-31")).toBe("2024-01-31");
-    expect(birthdateCodec.encode(iso)).toBe("2024-01-31");
+  it("AC-18.4 childrenCodec은 아이 목록을 JSON으로 왕복한다", () => {
+    expect(childrenCodec.decode(childrenCodec.encode(ONE_CHILD))).toEqual(
+      ONE_CHILD
+    );
   });
 
-  it.each(["blue", "", "SYSTEM", "auto"])(
-    "AC-18.4 themeCodec.decode(%j)는 null이다",
+  it.each(["blue", "", "SYSTEM", "auto", "system"])(
+    "AC-18.4 themeCodec.decode(%j)는 null이다(예전 기본값 'system'도 U-24부터 '값 없음' → 기본값 라이트)",
     (raw) => {
       expect(themeCodec.decode(raw)).toBeNull();
     }
   );
 
-  it.each(["system", "light", "dark"] as const)(
+  it.each(["light", "dark"] as const)(
     "AC-18.4 themeCodec은 %s를 왕복한다",
     (preference) => {
       expect(themeCodec.decode(preference)).toBe(preference);
@@ -109,19 +136,17 @@ describe("AC-18.4 코덱 decode — 손상 값은 null", () => {
 
 describe("AC-18.4 readValue — 손상 값은 null이고 덮어쓰지 않는다", () => {
   it.each(["2024-02-30", "abc"])(
-    "AC-18.4 저장된 생년월일 %j는 null로 읽히고 setItem·removeItem은 호출되지 않는다",
+    "AC-18.4 저장된 아이 목록 %j는 null로 읽히고 setItem·removeItem은 호출되지 않는다",
     async (raw) => {
-      await AsyncStorage.multiSet([[STORAGE_KEYS.birthdate, raw]]);
+      await AsyncStorage.multiSet([[STORAGE_KEYS.children, raw]]);
       jest.mocked(AsyncStorage.setItem).mockClear();
       jest.mocked(AsyncStorage.removeItem).mockClear();
 
-      expect(
-        await readValue(STORAGE_KEYS.birthdate, birthdateCodec)
-      ).toBeNull();
+      expect(await readValue(STORAGE_KEYS.children, childrenCodec)).toBeNull();
 
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
       expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
-      expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBe(raw);
+      expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBe(raw);
     }
   );
 
@@ -129,15 +154,15 @@ describe("AC-18.4 readValue — 손상 값은 null이고 덮어쓰지 않는다"
     expect(await readValue(STORAGE_KEYS.theme, themeCodec)).toBeNull();
   });
 
-  it("AC-18.4 유효한 값은 디코드되어 돌아온다(생년월일·테마·언어)", async () => {
+  it("AC-18.4 유효한 값은 디코드되어 돌아온다(아이 목록·테마·언어)", async () => {
     await AsyncStorage.multiSet([
-      [STORAGE_KEYS.birthdate, "2024-01-31"],
+      [STORAGE_KEYS.children, encodeChildren(ONE_CHILD)],
       [STORAGE_KEYS.theme, "dark"],
       [STORAGE_KEYS.locale, "en"],
     ]);
 
-    expect(await readValue(STORAGE_KEYS.birthdate, birthdateCodec)).toBe(
-      "2024-01-31"
+    expect(await readValue(STORAGE_KEYS.children, childrenCodec)).toEqual(
+      ONE_CHILD
     );
     expect(await readValue(STORAGE_KEYS.theme, themeCodec)).toBe("dark");
     expect(await readValue(STORAGE_KEYS.locale, localeCodec)).toBe("en");
@@ -154,13 +179,13 @@ describe("AC-18.3 [storage] 오류 흡수와 reportStorageError", () => {
     jest.mocked(AsyncStorage.getItem).mockRejectedValue(failure);
 
     await expect(
-      readValue(STORAGE_KEYS.birthdate, birthdateCodec)
+      readValue(STORAGE_KEYS.children, childrenCodec)
     ).resolves.toBeNull();
 
     expect(warn).toHaveBeenCalledWith(
       "[storage]",
       "get",
-      "vaccination-app-birthdate",
+      "vaccination-app-children",
       failure
     );
     expect(error).not.toHaveBeenCalled();
@@ -340,5 +365,80 @@ describe("G-5 storage 키별 쓰기 큐", () => {
     expect(results).toEqual([false, true]);
     expect(started).toEqual(["zh"]);
     expect(data.get(STORAGE_KEYS.locale)).toBe("zh");
+  });
+});
+
+// AC-21.7 (FR-16, U-29) 저장소 수준 이전: 새 키가 없을 때만 예전 생년월일·완료 키를 읽어 아이 1명으로 옮기고, 옮겨 쓴 뒤 예전 키를 지운다.
+describe("AC-21.7 loadChildren·commitChildrenMigration", () => {
+  it("AC-21.7 새 키가 있으면 그것을 읽고 예전 키는 읽지 않는다", async () => {
+    await AsyncStorage.multiSet([
+      [STORAGE_KEYS.children, encodeChildren(ONE_CHILD)],
+      [STORAGE_KEYS.birthdate, "2026-04-30"],
+    ]);
+    jest.mocked(AsyncStorage.getItem).mockClear();
+
+    expect(await loadChildren()).toEqual({ state: ONE_CHILD, migrated: false });
+    expect(AsyncStorage.getItem).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC-21.7 새 키가 없고 예전 생년월일이 있으면 아이 1명으로 옮길 상태(migrated)를 돌려주고, commitChildrenMigration은 새 키를 쓰고 예전 키 2개를 지운다", async () => {
+    await AsyncStorage.multiSet([
+      [STORAGE_KEYS.birthdate, "2026-04-30"],
+      [STORAGE_KEYS.completed, "2026-04-30|hepb-3"],
+    ]);
+
+    const loaded = await loadChildren();
+
+    expect(loaded.migrated).toBe(true);
+    expect(loaded.state.children).toEqual([
+      { id: "c1", birthdate: "2026-04-30", completed: ["hepb-3"] },
+    ]);
+    expect(await commitChildrenMigration(loaded.state)).toBe(true);
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBe(
+      encodeChildren(loaded.state)
+    );
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.completed)).toBeNull();
+  });
+
+  it("AC-21.7 새 키 쓰기가 실패하면 예전 키를 지우지 않고 false다", async () => {
+    await AsyncStorage.multiSet([[STORAGE_KEYS.birthdate, "2026-04-30"]]);
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.mocked(AsyncStorage.setItem).mockRejectedValueOnce(new Error("full"));
+    const { state } = await loadChildren();
+
+    expect(await commitChildrenMigration(state)).toBe(false);
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBe(
+      "2026-04-30"
+    );
+  });
+
+  it("AC-21.7 새 키 읽기가 실패하면 예전 키로 옮기지 않고 아이 없음이다(있을지 모르는 새 데이터를 덮어쓰지 않음). 예전 키 읽기 실패는 '없음'으로 본다", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    const failingChildren: KeyValueStore = {
+      getItem: (key) =>
+        key === STORAGE_KEYS.children
+          ? Promise.reject(new Error("broken"))
+          : Promise.resolve("2026-04-30"),
+      setItem: () => Promise.resolve(),
+      removeItem: () => Promise.resolve(),
+    };
+    const failingLegacy: KeyValueStore = {
+      getItem: (key) =>
+        key === STORAGE_KEYS.children
+          ? Promise.resolve(null)
+          : Promise.reject(new Error("broken")),
+      setItem: () => Promise.resolve(),
+      removeItem: () => Promise.resolve(),
+    };
+
+    expect(await loadChildren(failingChildren)).toEqual({
+      state: { activeId: null, children: [] },
+      migrated: false,
+    });
+    expect(await loadChildren(failingLegacy)).toEqual({
+      state: { activeId: null, children: [] },
+      migrated: false,
+    });
   });
 });

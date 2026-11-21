@@ -9,9 +9,10 @@ import { THEME_PREFERENCES } from "@/lib/themePreference";
 import { FONT_SIZE, MIN_CONTROL_HEIGHT, RADIUS, SPACING } from "@/theme/tokens";
 import type { ThemePreference } from "@/types";
 
-// 테마 3단 선택(FR-08, 설계서 §5.8): role="radiogroup" 안의 role="radio" + aria-checked, testID theme-option-{system|light|dark}.
-// 옵션 순서는 THEME_PREFERENCES(P3)다. 선택/비선택 색은 CONTRAST_PAIRS 등록 쌍(onPrimary/primary, chipText/chipBackground)만 쓴다.
-// 저장은 호출자가 넘긴 onChange(ThemeContext.setPreference)가 맡는다 — 'system'도 저장값 'system'으로 쓴다(AC-11.4).
+// 테마 선택(FR-08, 설계서 §5.8): role="radiogroup" 안의 role="radio" + aria-checked, testID theme-option-{light|dark}.
+// v1.5(U-24)에서 "시스템"을 없애고 라이트·다크 2개가 됐다. 옵션 순서는 THEME_PREFERENCES다.
+// 선택/비선택 색은 CONTRAST_PAIRS 등록 쌍(onPrimary/primary, chipText/chipBackground)만 쓴다.
+// 저장은 호출자가 넘긴 onChange(ThemeContext.setPreference)가 맡는다(AC-11.3·11.4). 헤더 테마 스위치(FR-15)와 같은 상태다.
 // 웹 키보드(Space 선택·방향키 이동·선택 항목만 Tab 정지)는 useRovingFocus가 맡는다(리뷰 R1-04, 네이티브는 no-op).
 
 export type ThemeSelectorProps = {
@@ -20,7 +21,6 @@ export type ThemeSelectorProps = {
 };
 
 const LABEL_KEYS = {
-  system: "settings.themeSystem",
   light: "settings.themeLight",
   dark: "settings.themeDark",
 } as const satisfies Readonly<Record<ThemePreference, TranslationKey>>;

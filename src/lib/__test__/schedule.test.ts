@@ -3,13 +3,21 @@ import {
   calculateScheduleDate,
   determineStatus,
   filterSchedule,
+  flattenSections,
+  focusTargetAfterToggle,
   formatMonthsLabel,
   generateSchedule,
   groupScheduleByAge,
+  sectionKindOf,
   sectionSchedule,
 } from "@/lib/schedule";
 import { VACCINATIONS } from "@/lib/vaccinationData";
-import type { Locale, ScheduleItem, ScheduleStatus } from "@/types";
+import type {
+  Locale,
+  ScheduleItem,
+  ScheduleItemId,
+  ScheduleStatus,
+} from "@/types";
 import { day, FIXED_NOW } from "../../../test-utils/render";
 
 function countStatuses(
@@ -336,6 +344,158 @@ describe("AC-6.5 sectionSchedule", () => {
     ]);
     expect(sectionSchedule(schedule, "past")).toEqual([]);
     expect(sectionSchedule([], "all")).toEqual([]);
+  });
+});
+
+// AC-19.2·19.3·19.5 (FR-14, U-19·U-20): 완료 체크한 곧 접종·예정 항목은 완료 구역으로 옮겨 간다.
+// '전체'는 접종할 구역 → 완료 구역 → 지난 구역, '예정'은 접종할 구역 → 완료 구역이다. 지난 항목은 완료해도 지난 구역 제자리다.
+// 2026-04-30 출생·기준일 2026-10-18: 생후 6개월 그룹 = hepb-3(곧 접종)·dtap-3·ipv-3·hib-3·pcv-3·rv-3·flu-1, 지난 출생 시 = bcg-1·hepb-1.
+describe("AC-19.2 sectionSchedule 완료 구역", () => {
+  const completedOf = (...ids: ScheduleItemId[]) =>
+    new Set<ScheduleItemId>(ids);
+
+  /** 구역별 [kind, 그룹별 카드 id] */
+  function layout(sections: ReturnType<typeof sectionSchedule>) {
+    return sections.map((section) => [
+      section.kind,
+      section.groups.map((group) => [
+        group.minMonths,
+        group.items.map((item) => item.id),
+      ]),
+    ]);
+  }
+
+  it("AC-19.2 '전체'에서 hepb-3(곧 접종)·hpv-2(예정)를 완료하면 완료 구역(그룹 6·150)이 접종할 구역 뒤, 지난 구역 앞에 오고 카드 수는 41 그대로다", () => {
+    const sections = sectionSchedule(
+      scheduleFor("2026-04-30"),
+      "all",
+      completedOf("hpv-2", "hepb-3")
+    );
+
+    expect(sections.map((section) => section.kind)).toEqual([
+      "upcoming",
+      "completed",
+      "past",
+    ]);
+    const [upcoming, completed, past] = layout(sections);
+    expect(upcoming?.[1]).toContainEqual([
+      6,
+      ["dtap-3", "ipv-3", "hib-3", "pcv-3", "rv-3", "flu-1"],
+    ]);
+    expect(upcoming?.[1]).not.toContainEqual([150, ["hpv-2"]]);
+    expect(completed).toEqual([
+      "completed",
+      [
+        [6, ["hepb-3"]],
+        [150, ["hpv-2"]],
+      ],
+    ]);
+    expect(past?.[1]).toEqual([
+      [0, ["bcg-1", "hepb-1"]],
+      [1, ["hepb-2"]],
+      [2, ["dtap-1", "ipv-1", "hib-1", "pcv-1", "rv-1"]],
+      [4, ["dtap-2", "ipv-2", "hib-2", "pcv-2", "rv-2"]],
+    ]);
+    expect(flattenSections(sections)).toHaveLength(41);
+  });
+
+  it("AC-19.3 '예정'에서는 완료 구역이 맨 아래(마지막 구역)이고 카드 수는 28 그대로다", () => {
+    const sections = sectionSchedule(
+      scheduleFor("2026-04-30"),
+      "upcoming",
+      completedOf("hepb-3")
+    );
+
+    expect(layout(sections).slice(1)).toEqual([
+      ["completed", [[6, ["hepb-3"]]]],
+    ]);
+    const order = flattenSections(sections);
+    expect(order).toHaveLength(28);
+    expect(order[order.length - 1]).toBe("hepb-3");
+  });
+
+  it("AC-19.5 지난 항목(bcg-1)은 완료해도 지난 구역 제자리이고 완료 구역은 생기지 않으며, '지남' 필터도 그대로다", () => {
+    const schedule = scheduleFor("2026-04-30");
+    const completed = completedOf("bcg-1");
+
+    expect(layout(sectionSchedule(schedule, "all", completed))).toEqual(
+      layout(sectionSchedule(schedule, "all"))
+    );
+    expect(layout(sectionSchedule(schedule, "past", completed))).toEqual(
+      layout(sectionSchedule(schedule, "past"))
+    );
+    expect(sectionKindOf(itemById(schedule, "bcg-1"), completed)).toBe("past");
+  });
+
+  it("AC-19.2 모든 남은 항목을 완료하면 '전체'는 완료 구역 → 지난 구역, '예정'은 완료 구역 하나다(빈 접종할 구역은 뺀다)", () => {
+    const schedule = scheduleFor("2026-04-30");
+    const completed = new Set(
+      schedule.filter((item) => item.status !== "past").map((item) => item.id)
+    );
+
+    expect(
+      sectionSchedule(schedule, "all", completed).map((s) => s.kind)
+    ).toEqual(["completed", "past"]);
+    expect(
+      sectionSchedule(schedule, "upcoming", completed).map((s) => s.kind)
+    ).toEqual(["completed"]);
+  });
+
+  it("AC-19.2 sectionKindOf: 곧 접종·예정은 완료면 completed, 아니면 upcoming이고 지난 항목은 past다", () => {
+    const schedule = scheduleFor("2026-04-30");
+    const completed = completedOf("hepb-3", "hib-4", "bcg-1");
+
+    expect(
+      ["hepb-3", "hib-4", "dtap-3", "bcg-1", "hepb-1"].map((id) =>
+        sectionKindOf(itemById(schedule, id), completed)
+      )
+    ).toEqual(["completed", "completed", "upcoming", "past", "past"]);
+  });
+});
+
+// U-22: 완료를 뒤집어 카드가 구역을 옮기면 토글 전 목록에서 바로 다음 카드(마지막이면 앞 카드, 혼자면 자신)로 포커스를 옮긴다.
+describe("U-22 focusTargetAfterToggle", () => {
+  const schedule = scheduleFor("2026-04-30");
+  const none: ReadonlySet<ScheduleItemId> = new Set();
+
+  it("U-22 '전체'에서 hepb-3을 체크하면 바로 다음 카드 dtap-3, 접종할 구역 마지막 hpv-2를 체크하면 지난 구역 첫 카드 bcg-1이다", () => {
+    expect(focusTargetAfterToggle(schedule, "all", none, "hepb-3")).toBe(
+      "dtap-3"
+    );
+    expect(focusTargetAfterToggle(schedule, "all", none, "hpv-2")).toBe(
+      "bcg-1"
+    );
+  });
+
+  it("U-22 완료 구역의 hepb-3을 해제하면 완료 구역의 다음 카드 dtap-3이고, '예정' 맨 아래 마지막 카드를 해제하면 바로 앞 카드다", () => {
+    const completed = new Set<ScheduleItemId>(["hepb-3", "dtap-3"]);
+
+    expect(focusTargetAfterToggle(schedule, "all", completed, "hepb-3")).toBe(
+      "dtap-3"
+    );
+    expect(
+      focusTargetAfterToggle(schedule, "upcoming", completed, "dtap-3")
+    ).toBe("hepb-3");
+  });
+
+  it("U-22 목록에 그 카드 하나뿐이면 그 카드 자신이다(새 구역에서 다시 마운트된 카드)", () => {
+    const only = schedule.filter((item) => item.id === "hpv-2");
+
+    expect(focusTargetAfterToggle(only, "upcoming", none, "hpv-2")).toBe(
+      "hpv-2"
+    );
+  });
+
+  it("U-22 구역이 그대로인 지난 카드, 필터에 보이지 않는 카드, 일정에 없는 id는 undefined다(포커스를 옮기지 않음)", () => {
+    expect(focusTargetAfterToggle(schedule, "all", none, "bcg-1")).toBe(
+      undefined
+    );
+    expect(focusTargetAfterToggle(schedule, "past", none, "hepb-3")).toBe(
+      undefined
+    );
+    expect(focusTargetAfterToggle(schedule, "all", none, "nope-1")).toBe(
+      undefined
+    );
   });
 });
 

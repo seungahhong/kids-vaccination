@@ -2,12 +2,14 @@ import type { ComponentType, ReactElement, ReactNode } from "react";
 import { ScrollView, StyleSheet, View, type ViewProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AppHeader } from "@/components/common/AppHeader";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useBlurInert } from "@/hooks/useBlurInert";
 import type { BlurInertProps } from "@/hooks/useBlurInert.types";
 import { SPACING } from "@/theme/tokens";
 
-// 화면 셸(설계서 §5.8): 최외곽 View에 testID(screen-*)와 배경 토큰, SafeArea top/left/right 패딩.
+// 화면 셸(설계서 §5.8): 최외곽 View에 testID(screen-*)와 배경 토큰, SafeArea left/right 패딩.
+// 맨 위에는 앱 헤더(AppHeader, FR-15)가 스크롤 밖에 고정되고, SafeArea top 패딩은 헤더가 준다(상태 표시줄 뒤까지 헤더 배경이 이어지게).
 // 하단 inset은 탭 바가 처리한다. 색은 렌더 시 tokens에서 인라인으로 합친다(§7.3).
 // 최외곽 View는 useBlurInert의 props도 받는다. 웹에서 하단 탭으로 떠난 화면은 inert라 Tab 순서·보조기기에서 빠지고
 // (활성 화면 뒤에 남아 있어도 키보드로 닿지 않음), 네이티브는 아무것도 더하지 않는다(리뷰 R2-01).
@@ -38,13 +40,13 @@ export function Screen({
   const blurInert = useBlurInert();
   const frame = {
     backgroundColor: tokens.background,
-    paddingTop: insets.top,
     paddingLeft: insets.left,
     paddingRight: insets.right,
   };
 
   return (
     <ScreenFrame testID={testID} style={[styles.fill, frame]} {...blurInert}>
+      <AppHeader />
       {scroll ? (
         <ScrollView style={styles.fill} contentContainerStyle={styles.content}>
           {children}

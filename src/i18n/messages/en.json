@@ -4,7 +4,8 @@
     "home": "Home",
     "schedule": "Schedule",
     "settings": "Settings",
-    "disclaimer": "This information is for reference only. Please consult a pediatrician for accurate medical advice."
+    "disclaimer": "This information is for reference only. Please consult a pediatrician for accurate medical advice.",
+    "dataSource": "Source: Korea Disease Control and Prevention Agency (KDCA) 2026 National Immunization Program guidelines and Korean Pediatric Society recommendations · Last updated: {date}"
   },
   "home": {
     "title": "Baby Vaccination\nSchedule Manager",
@@ -21,7 +22,14 @@
     "birthdateLabel": "Date of birth",
     "selectBirthdate": "Select date of birth",
     "pickerConfirm": "Done",
-    "pickerCancel": "Cancel"
+    "pickerCancel": "Cancel",
+    "savedChildren": "Saved children",
+    "addChild": "Add a child",
+    "childName": "Name",
+    "childNamePlaceholder": "e.g. Emma",
+    "optional": "Optional",
+    "required": "Required",
+    "childrenFull": "You can save up to {max} children. Delete a child in Settings to add another."
   },
   "schedule": {
     "title": "Vaccination Schedule",
@@ -40,7 +48,11 @@
     "filterLabel": "Vaccination status filter",
     "pastSection": "Past vaccinations",
     "national": "Required",
-    "optional": "Optional"
+    "optional": "Optional",
+    "completed": "Done",
+    "completedSection": "Completed vaccinations",
+    "markCompleted": "Vaccinated",
+    "childSelector": "Select child"
   },
   "settings": {
     "title": "Settings",
@@ -55,8 +67,11 @@
     "resetDone": "Reset complete",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "themeSystem": "System",
     "themeLight": "Light",
-    "themeDark": "Dark"
+    "themeDark": "Dark",
+    "childrenCount": "{count} of {max} children saved",
+    "delete": "Delete",
+    "deleteChild": "Delete {name}",
+    "deleteChildConfirm": "Delete {name}?"
   }
 }

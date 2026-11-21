@@ -6,6 +6,7 @@
 // 설정 화면 열기(openSettings)와 호스트 포커스 탐침(hostWithProps·sharedHostFocus)은 설정 화면 테스트와
 // roving 훅 테스트(src/hooks/__test__/useRovingFocus.test.tsx)가 함께 쓴다(리뷰 R2-04, U-08 이동).
 // 배치 완료 흉내(fireLayout)는 설정 화면 테스트와 아기 정보 섹션 테스트가 함께 쓴다(V-01).
+// 키 입력 흉내(keyDown)는 roving 훅 테스트와 체크박스 키 훅 테스트가 함께 쓴다(U-22).
 // ScrollView 조상 찾기(closestScrollView)는 홈 화면 테스트와 Screen 컴포넌트 테스트가 함께 쓴다(리뷰 R3-02, U-08 이동).
 // 이 파일 자체의 테스트(renderWithProviders의 now 주입)는 test-utils/__test__/render.test.tsx에 있다.
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,11 +27,16 @@ import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { createRef, type ReactElement, type ReactNode } from "react";
 import * as ReactNative from "react-native";
-import { type HostInstance, View } from "react-native";
+import {
+  type HostInstance,
+  type KeyDownEvent,
+  type KeyEvent,
+  View,
+} from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { LoadingGate } from "@/components/common/LoadingGate";
-import { BirthdateProvider } from "@/contexts/BirthdateContext";
+import { ChildrenProvider } from "@/contexts/ChildrenContext";
 import { I18nProvider } from "@/contexts/I18nContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ClockContext } from "@/hooks/useToday";
@@ -210,7 +216,7 @@ export function createClockWrapper(getNow: () => Date) {
 }
 
 /**
- * 화면·컴포넌트 단위 렌더: Clock → SafeArea → Theme → I18n → Birthdate → LoadingGate → ui
+ * 화면·컴포넌트 단위 렌더: Clock → SafeArea → Theme → I18n → Children → LoadingGate → ui
  * (루트 레이아웃과 같은 Provider 순서, nav theme·Slot 제외). 하이드레이션 전에는 loading-gate가 보이므로
  * 단언은 findBy*로 기다리거나 deferStorage로 시점을 제어한다.
  */
@@ -225,9 +231,9 @@ export async function renderWithProviders(
         <SafeAreaProvider>
           <ThemeProvider>
             <I18nProvider>
-              <BirthdateProvider>
+              <ChildrenProvider>
                 <LoadingGate>{children}</LoadingGate>
-              </BirthdateProvider>
+              </ChildrenProvider>
             </I18nProvider>
           </ThemeProvider>
         </SafeAreaProvider>
@@ -294,10 +300,14 @@ export async function openSettings() {
 /**
  * 네이티브 뷰가 붙고 배치를 마친 시점(onLayout)을 흉내 낸다. 테스트 렌더러는 onLayout을 스스로 부르지 않으므로
  * "네이티브 뷰가 생긴 뒤에만 할 수 있는 일"(화면 낭독기 포커스 이동, V-01)은 이 호출로 시점을 연다.
+ * height는 배치된 높이다(헤더 높이를 재서 언어 메뉴 층의 top으로 쓰는 AppHeader 테스트, U-25).
  */
-export async function fireLayout(element: HostElement): Promise<void> {
+export async function fireLayout(
+  element: HostElement,
+  height = 48
+): Promise<void> {
   await fireEvent(element, "layout", {
-    nativeEvent: { layout: { x: 0, y: 0, width: 320, height: 48 } },
+    nativeEvent: { layout: { x: 0, y: 0, width: 320, height } },
   });
 }
 
@@ -317,4 +327,69 @@ export async function sharedHostFocus() {
   const focus = jest.mocked(probe.current.focus);
   focus.mockClear();
   return focus;
+}
+
+/**
+ * fireEvent로 onKeyDown에 넘길 KeyDownEvent(RN 0.88 타입)와 그 preventDefault spy.
+ * 웹 키보드 훅(useRovingFocus.web·useToggleKeys.web) 테스트가 쓴다. repeat는 키를 누르고 있어 반복되는 keydown이다.
+ */
+export function keyDown(
+  key: string,
+  modifiers: Partial<
+    Pick<KeyEvent, "altKey" | "ctrlKey" | "metaKey" | "repeat">
+  > = {}
+) {
+  const preventDefault = jest.fn();
+  const event: KeyDownEvent = {
+    bubbles: true,
+    cancelable: true,
+    currentTarget: 0,
+    defaultPrevented: false,
+    dispatchConfig: { registrationName: "onKeyDown" },
+    eventPhase: 2,
+    isDefaultPrevented: () => false,
+    isPropagationStopped: () => false,
+    isTrusted: true,
+    nativeEvent: {
+      key,
+      code: key,
+      altKey: false,
+      ctrlKey: false,
+      metaKey: false,
+      shiftKey: false,
+      ...modifiers,
+    },
+    persist: () => {},
+    preventDefault,
+    stopPropagation: () => {},
+    target: 0,
+    timeStamp: 0,
+    type: "keydown",
+  };
+  return { event, preventDefault };
+}
+
+function isPropsRecord(
+  value: unknown
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null;
+}
+
+/**
+ * 호스트 인스턴스(포커스·화면 낭독기 이벤트의 대상)의 props. 대상이 아니면 빈 객체다.
+ * 호스트 객체를 toEqual·toHaveBeenCalledWith로 직접 비교하면 실패할 때 React 내부(fiber) 그래프 전체를 diff하느라 jest가
+ * 사실상 멈춘다(실측). 그래서 testID·accessibilityLabel 같은 문자열만 뽑아 비교한다.
+ */
+export function propsOf(node: unknown): Readonly<Record<string, unknown>> {
+  if (!isPropsRecord(node) || !("props" in node)) return {};
+  const { props } = node;
+  return isPropsRecord(props) ? props : {};
+}
+
+/** 호스트를 "testID" 또는 "testID(접근 이름)" 문자열로 요약한다(포커스 대상 단언용) */
+export function describeHost(node: unknown): string {
+  const props = propsOf(node);
+  const testID = typeof props.testID === "string" ? props.testID : "?";
+  const label = props.accessibilityLabel;
+  return typeof label === "string" ? `${testID}(${label})` : testID;
 }

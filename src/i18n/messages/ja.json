@@ -4,7 +4,8 @@
     "home": "ホーム",
     "schedule": "接種日程",
     "settings": "設定",
-    "disclaimer": "この情報は参考用です。正確な内容は小児科医にご相談ください。"
+    "disclaimer": "この情報は参考用です。正確な内容は小児科医にご相談ください。",
+    "dataSource": "出典：韓国疾病管理庁「2026年国家予防接種指針」、大韓小児青少年科学会の推奨日程 ・ 最終更新：{date}"
   },
   "home": {
     "title": "赤ちゃん予防接種\nスケジュール管理",
@@ -21,7 +22,14 @@
     "birthdateLabel": "生年月日",
     "selectBirthdate": "生年月日を選択",
     "pickerConfirm": "完了",
-    "pickerCancel": "キャンセル"
+    "pickerCancel": "キャンセル",
+    "savedChildren": "保存した子ども",
+    "addChild": "子どもを追加",
+    "childName": "名前",
+    "childNamePlaceholder": "例: はると",
+    "optional": "任意",
+    "required": "必須",
+    "childrenFull": "最大{max}人まで保存できます。設定で子どもを削除してから追加してください。"
   },
   "schedule": {
     "title": "予防接種日程",
@@ -40,7 +48,11 @@
     "filterLabel": "接種状況フィルター",
     "pastSection": "過去の接種",
     "national": "定期",
-    "optional": "任意"
+    "optional": "任意",
+    "completed": "接種済み",
+    "completedSection": "完了した接種",
+    "markCompleted": "接種済み",
+    "childSelector": "子どもを選択"
   },
   "settings": {
     "title": "設定",
@@ -55,8 +67,11 @@
     "resetDone": "初期化完了",
     "cancel": "キャンセル",
     "confirm": "確認",
-    "themeSystem": "システム",
     "themeLight": "ライト",
-    "themeDark": "ダーク"
+    "themeDark": "ダーク",
+    "childrenCount": "保存した子ども {count}人(最大{max}人)",
+    "delete": "削除",
+    "deleteChild": "{name}を削除",
+    "deleteChildConfirm": "{name}の情報を削除しますか？"
   }
 }

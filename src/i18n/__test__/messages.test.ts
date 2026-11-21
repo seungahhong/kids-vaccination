@@ -2,7 +2,7 @@ import en from "@/i18n/messages/en.json";
 import ja from "@/i18n/messages/ja.json";
 import ko from "@/i18n/messages/ko.json";
 import zh from "@/i18n/messages/zh.json";
-import { CATALOGS, localize, translate } from "@/i18n/translate";
+import { CATALOGS, formatMessage, localize, translate } from "@/i18n/translate";
 import type { TranslationKey } from "@/i18n/types";
 import type { Locale } from "@/types";
 
@@ -168,10 +168,6 @@ type ValuesByLocale = Readonly<Record<Locale, string>>;
 const CONFIRMED_VALUES: readonly (readonly [string, ValuesByLocale])[] = [
   ["common.disclaimer", ORIGINAL_CHAT_DISCLAIMER],
   [
-    "settings.themeSystem",
-    { ko: "시스템", en: "System", ja: "システム", zh: "跟随系统" },
-  ],
-  [
     "settings.themeLight",
     { ko: "라이트", en: "Light", ja: "ライト", zh: "浅色" },
   ],
@@ -212,6 +208,52 @@ const CONFIRMED_VALUES: readonly (readonly [string, ValuesByLocale])[] = [
       zh: "要删除宝宝的出生日期吗？",
     },
   ],
+  // FR-14 접종 완료 체크(U-19·U-22): 상태 배지, 구역 제목, 체크박스 접근 이름 뒷부분
+  [
+    "schedule.completed",
+    { ko: "완료", en: "Done", ja: "接種済み", zh: "已接种" },
+  ],
+  [
+    "schedule.completedSection",
+    {
+      ko: "접종 완료",
+      en: "Completed vaccinations",
+      ja: "完了した接種",
+      zh: "已完成接种",
+    },
+  ],
+  [
+    "schedule.markCompleted",
+    { ko: "접종 완료", en: "Vaccinated", ja: "接種済み", zh: "已接种" },
+  ],
+  // FR-16 여러 아이(U-26~U-28): {name}·{count}·{max} 자리표시자는 formatMessage가 채운다
+  [
+    "settings.deleteChild",
+    {
+      ko: "{name} 삭제",
+      en: "Delete {name}",
+      ja: "{name}を削除",
+      zh: "删除{name}",
+    },
+  ],
+  [
+    "settings.deleteChildConfirm",
+    {
+      ko: "{name} 정보를 삭제할까요?",
+      en: "Delete {name}?",
+      ja: "{name}の情報を削除しますか？",
+      zh: "要删除{name}的信息吗？",
+    },
+  ],
+  [
+    "settings.childrenCount",
+    {
+      ko: "저장된 아이 {count}명 (최대 {max}명)",
+      en: "{count} of {max} children saved",
+      ja: "保存した子ども {count}人(最大{max}人)",
+      zh: "已保存 {count} 个孩子(最多 {max} 个)",
+    },
+  ],
 ];
 
 /** 원본 settings.reset / settings.resetConfirm 문구(U-06으로 대체됨). AC-14.2는 화면에서 0개를 관찰한다 */
@@ -229,7 +271,9 @@ const LEGACY_RESET_TEXTS: readonly string[] = [
 /**
  * 최종 키 집합 = 원본 51개 − 제거 11개(chat.* 8, common.chat, schedule.askAI, schedule.dose) + 신규 8개(PRD §2.3.0-b)
  * + 리뷰 라운드 1 추가 1개(schedule.filterLabel, R1-07) + 일정 구역 제목 1개(schedule.pastSection, U-13)
- * + 분류 배지 2개(schedule.national·optional, U-15) = 52개
+ * + 분류 배지 2개(schedule.national·optional, U-15) + 접종 완료 3개(schedule.completed·completedSection·markCompleted, FR-14)
+ * − 테마 "시스템" 1개(settings.themeSystem, v1.5 U-24) + 여러 아이 12개(home 7·schedule 1·settings 4, FR-16)
+ * + 데이터 출처·업데이트 날짜 1개(common.dataSource) = 67개
  */
 const EXPECTED_KEYS: readonly string[] = [
   "common.appName",
@@ -237,6 +281,7 @@ const EXPECTED_KEYS: readonly string[] = [
   "common.schedule",
   "common.settings",
   "common.disclaimer",
+  "common.dataSource",
   "home.title",
   "home.subtitle",
   "home.year",
@@ -252,6 +297,13 @@ const EXPECTED_KEYS: readonly string[] = [
   "home.selectBirthdate",
   "home.pickerConfirm",
   "home.pickerCancel",
+  "home.savedChildren",
+  "home.addChild",
+  "home.childName",
+  "home.childNamePlaceholder",
+  "home.optional",
+  "home.required",
+  "home.childrenFull",
   "schedule.title",
   "schedule.birthdate",
   "schedule.filterAll",
@@ -269,6 +321,10 @@ const EXPECTED_KEYS: readonly string[] = [
   "schedule.pastSection",
   "schedule.national",
   "schedule.optional",
+  "schedule.completed",
+  "schedule.completedSection",
+  "schedule.markCompleted",
+  "schedule.childSelector",
   "settings.title",
   "settings.theme",
   "settings.darkMode",
@@ -281,9 +337,12 @@ const EXPECTED_KEYS: readonly string[] = [
   "settings.resetDone",
   "settings.cancel",
   "settings.confirm",
-  "settings.themeSystem",
   "settings.themeLight",
   "settings.themeDark",
+  "settings.childrenCount",
+  "settings.delete",
+  "settings.deleteChild",
+  "settings.deleteChildConfirm",
 ];
 
 // 지원(PRD §2.3.0-b 확정 표 · U-06 · U-07 · 설계서 §4.4): 신규·변경 키의 4개 언어 값, 제거 키, 최종 키 집합.
@@ -320,9 +379,18 @@ describe("G-5 §2.3.0-b 확정 번역 키(신규·변경·제거)", () => {
     }
   });
 
-  it("G-5 최종 키 집합은 원본 − 제거 11개 + 신규 8개 + 리뷰 추가 1개(R1-07) + U-13 추가 1개 + U-15 추가 2개 = 52개와 정확히 같다(초과 키 검사)", () => {
+  it("G-5 최종 키 집합은 원본 − 제거 11개 + 신규 8개 + 리뷰 추가 1개(R1-07) + U-13 추가 1개 + U-15 추가 2개 + FR-14 추가 3개 − U-24 제거 1개(settings.themeSystem) + FR-16 추가 12개 + 출처 1개(common.dataSource) = 67개와 정확히 같다(초과 키 검사)", () => {
     expect(dotPaths(ko)).toEqual([...EXPECTED_KEYS].sort());
-    expect(EXPECTED_KEYS).toHaveLength(52);
+    expect(EXPECTED_KEYS).toHaveLength(67);
+  });
+
+  it("G-5 U-24 settings.themeSystem('시스템' 테마)은 4개 파일 모두에 없다", () => {
+    for (const [locale, tree] of TREES) {
+      expect([locale, lookup(tree, "settings.themeSystem")]).toEqual([
+        locale,
+        undefined,
+      ]);
+    }
   });
 });
 
@@ -453,6 +521,42 @@ describe("G-5 P-11 원본 키 값 유지", () => {
     (path, values) => {
       for (const [locale, tree] of TREES) {
         expect([locale, lookup(tree, path)]).toEqual([locale, values[locale]]);
+      }
+    }
+  );
+});
+
+// FR-16: 문구 안 자리표시자 채우기. 언어마다 어순이 달라 문자열을 이어 붙이지 않는다
+describe("G-5 formatMessage", () => {
+  it("G-5 {name}·{count}·{max}를 값으로 바꾸고(숫자는 문자열로), 값이 없는 자리표시자는 그대로 둔다", () => {
+    expect(formatMessage("{name} 삭제", { name: "민준" })).toBe("민준 삭제");
+    expect(
+      formatMessage(translate("en", "settings.childrenCount"), {
+        count: 2,
+        max: 10,
+      })
+    ).toBe("2 of 10 children saved");
+    expect(formatMessage("{name}·{other}", { name: "a" })).toBe("a·{other}");
+    expect(formatMessage("no placeholder", { name: "a" })).toBe(
+      "no placeholder"
+    );
+  });
+
+  it.each(["ko", "en", "ja", "zh"] as const)(
+    "G-5 %s: FR-16 문구의 자리표시자는 {name}·{count}·{max}뿐이고 채우면 남는 중괄호가 없다",
+    (locale) => {
+      for (const key of [
+        "settings.deleteChild",
+        "settings.deleteChildConfirm",
+        "settings.childrenCount",
+        "home.childrenFull",
+      ] as const) {
+        const filled = formatMessage(translate(locale, key), {
+          name: "X",
+          count: 1,
+          max: 10,
+        });
+        expect([key, filled.includes("{")]).toEqual([key, false]);
       }
     }
   );

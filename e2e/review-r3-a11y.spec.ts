@@ -61,7 +61,11 @@ test("R3-01 결과 0건 필터(생년월일 2026-10-18 + '지남')에서 Tab으�
     ["light", LIGHT_BG],
     ["dark", DARK_BG],
   ] as const) {
-    await page.emulateMedia({ colorScheme: scheme });
+    // 테마는 헤더 테마 스위치로 바꾼다(v1.5 U-24: 앱이 OS 색 모드를 따르지 않음). 기본값은 라이트다
+    if (scheme === "dark") {
+      await schedule.getByTestId("header-theme-toggle").click();
+      await pastFilter.focus();
+    }
     await expect(schedule).toHaveCSS("background-color", background);
     await expect(pastFilter).toBeFocused();
     const blurredOutline = await outlineOf(panel);

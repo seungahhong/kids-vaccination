@@ -2,14 +2,17 @@ import type { Locator, Page } from "@playwright/test";
 
 import {
   bgColor,
+  collectErrors,
   expect,
+  readChildren,
   type ScreenName,
   type SeedValues,
   test,
 } from "./fixtures";
 
 // 일정 화면 E2E 판정 테스트: FR-03(AC-4.6, 5.4, 5.5), FR-04(AC-6.1, 6.2), FR-05(AC-7.1~7.4), FR-06(AC-8.1~8.3, 9.1~9.3),
-// FR-07(AC-10.1), FR-09(AC-12.2), FR-12(AC-16.1), 영속화 공통(AC-18.5). 제목은 AC ID로 시작한다(PRD §7.3 집계 규칙).
+// FR-07(AC-10.1), FR-09(AC-12.2), FR-12(AC-16.1), 영속화 공통(AC-18.5), FR-14 접종 완료 체크(AC-19.1~19.5·19.9·19.10).
+// 제목은 AC ID로 시작한다(PRD §7.3 집계 규칙).
 // 기준일은 fixture가 고정한 2026-10-18 10:00 KST다. 화면 요소는 screenOf('schedule') 범위에서 찾는다(AD-08).
 // 카드는 컨테이너 schedule-card-{id}(role 없음) 안의 토글 버튼 card-toggle(role=button, aria-expanded)과
 // 펼쳤을 때만 있는 형제 영역 card-details로 판정한다(U-02, 설계서 §9.8 규약 7).
@@ -640,7 +643,7 @@ test("U-15 생년월일 2026-04-30이면 카드마다 category-badge가 1개(41�
 // FR-12 면책 문구 (US-16)
 // ---------------------------------------------------------------------------
 
-test("AC-16.1 생년월일 2026-04-30이면 disclaimer가 1개(한국어 문구)이고 DOM 순서상 schedule-birthdate 뒤, 필터 filter-all과 첫 카드 nirsevimab-1 앞(boundingBox y가 더 작음)에 있다", async ({
+test("AC-16.1 생년월일 2026-04-30이면 disclaimer가 1개(한국어 문구)이고 DOM 순서상 아이 선택(schedule-child-selector, v1.7) 뒤, 필터 filter-all과 첫 카드 nirsevimab-1 앞(boundingBox y가 더 작음)에 있다", async ({
   page,
   seed,
   screenOf,
@@ -656,7 +659,7 @@ test("AC-16.1 생년월일 2026-04-30이면 disclaimer가 1개(한국어 문구)
     "data-testid",
     "schedule-card-nirsevimab-1"
   );
-  const birthdate = schedule.getByTestId("schedule-birthdate");
+  const birthdate = schedule.getByTestId("schedule-child-selector");
   const filterAll = schedule.getByTestId("filter-all");
   const firstCard = card(schedule, "nirsevimab-1");
   const between = await disclaimer.evaluate(
@@ -716,4 +719,290 @@ test("AC-18.5 저장값 생년월일 'abc'(손상)로 /schedule에 진입하면 
   // 홈이 완전히 렌더된 뒤(입력 표시) 0개를 판정한다
   await expect(home.getByTestId("birthdate-input")).toBeVisible();
   await expect(home.getByTestId("existing-birthdate-shortcut")).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------------------
+// FR-14 접종 완료 체크 (US-19, U-19~U-22)
+// 2026-04-30 출생: hepb-3 = 생후 6개월 그룹 첫 카드(곧 접종), 그 다음 dtap-3·ipv-3, bcg-1 = 지난 구역 첫 카드.
+// ---------------------------------------------------------------------------
+
+// 예전(v1.6까지) 완료 기록 키. 시드하면 생년월일과 함께 아이 1명으로 옮겨진다(U-29). 이후 완료 기록은 아이 목록 JSON 안에 있다
+const COMPLETED_KEY = "vaccination-app-completed";
+
+/** 저장된 아이 목록에서 첫 아이의 완료 기록(FR-16) */
+async function completedOf(page: Page): Promise<unknown> {
+  const stored = await readChildren(page);
+  if (typeof stored !== "object" || stored === null) return null;
+  if (!("children" in stored) || !Array.isArray(stored.children)) return null;
+  const [first]: unknown[] = stored.children;
+  return typeof first === "object" && first !== null && "completed" in first
+    ? first.completed
+    : null;
+}
+const COMPLETED_SECTION_KO = "접종 완료";
+const OUTLINE_SELECTOR = `${GROUP_HEADER_SELECTOR}, [data-testid="schedule-completed-section"], [data-testid="schedule-past-section"]`;
+/** "전체"의 접종할 구역 그룹 헤더(AC-6.1 앞 12개) */
+const UPCOMING_HEADERS = [0, 6, 7, 12, 15, 18, 24, 48, 72, 132, 144, 150].map(
+  (months) => `group-header-${months}`
+);
+
+/** 완료 구역 제목 */
+function completedSection(scope: Locator): Locator {
+  return scope.getByTestId("schedule-completed-section");
+}
+
+/** 카드 id의 완료 체크박스 */
+function checkboxOf(scope: Locator, id: string): Locator {
+  return card(scope, id).getByTestId("complete-checkbox");
+}
+
+/** DOM 순서의 그룹 헤더·구역 제목 testID */
+async function outline(scope: Locator): Promise<string[]> {
+  return scope
+    .locator(OUTLINE_SELECTOR)
+    .evaluateAll((elements) =>
+      [...elements]
+        .sort((a, b) =>
+          a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING
+            ? -1
+            : 1
+        )
+        .map((element) => element.getAttribute("data-testid") ?? "")
+    );
+}
+
+/** DOM 순서의 카드 id */
+async function cardOrder(scope: Locator): Promise<string[]> {
+  return (await groupLayout(scope)).flatMap((group) => group.cards);
+}
+
+test("AC-19.1 생년월일 2026-04-30이면 카드마다 완료 체크박스(role checkbox, aria-checked=false)가 있어 41개이고, hepb-3 체크박스('B형간염 3차: 접종 완료')를 누르면 aria-checked=true·배지 '완료'·저장된 그 아이의 완료 기록이 [hepb-3]이며 새로고침 뒤에도 체크가 유지된다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+  });
+  await expect(cards(schedule)).toHaveCount(41);
+  await expect(schedule.getByRole("checkbox")).toHaveCount(41);
+  await expect(schedule.getByTestId("complete-checkbox")).toHaveCount(41);
+  await expect(
+    schedule.locator('[role="checkbox"][aria-checked="true"]')
+  ).toHaveCount(0);
+  const hepb3 = schedule.getByRole("checkbox", {
+    name: "B형간염 3차: 접종 완료",
+    exact: true,
+  });
+  await expect(hepb3).toHaveAttribute("aria-checked", "false");
+  await expect(hepb3).toHaveAttribute("data-testid", "complete-checkbox");
+
+  await hepb3.click();
+
+  await expect(hepb3).toHaveAttribute("aria-checked", "true");
+  await expect(card(schedule, "hepb-3").getByTestId("status-badge")).toHaveText(
+    "완료"
+  );
+  await expect(
+    schedule.locator('[role="checkbox"][aria-checked="true"]')
+  ).toHaveCount(1);
+  await expect.poll(() => completedOf(page)).toEqual(["hepb-3"]);
+
+  await page.reload();
+  await expect(schedule).toBeVisible();
+  await expect(hepb3).toHaveAttribute("aria-checked", "true");
+  await expect(completedSection(schedule)).toHaveCount(1);
+});
+
+test("AC-19.2 '전체'에서 hepb-3을 체크하면 hepb-3이 접종할 구역에서 빠져 '지난 접종' 바로 위의 '접종 완료' 구역(heading level 2, 생후 6개월 그룹)으로 가고, 그룹별 카드 수가 1·6·1·7·2·1·1·3·1·1·2·1·1·2·1·5·5(카드 41개 그대로)다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+  });
+  await expect(cards(schedule)).toHaveCount(41);
+
+  await checkboxOf(schedule, "hepb-3").click();
+
+  await expect(completedSection(schedule)).toHaveCount(1);
+  await expect(
+    schedule.getByRole("heading", { level: 2, name: COMPLETED_SECTION_KO })
+  ).toHaveAttribute("data-testid", "schedule-completed-section");
+  expect(await outline(schedule)).toEqual([
+    ...UPCOMING_HEADERS,
+    "schedule-completed-section",
+    "group-header-6",
+    "schedule-past-section",
+    "group-header-0",
+    "group-header-1",
+    "group-header-2",
+    "group-header-4",
+  ]);
+  const layout = await groupLayout(schedule);
+  expect(layout.map((group) => group.cards.length)).toEqual([
+    1, 6, 1, 7, 2, 1, 1, 3, 1, 1, 2, 1, 1, 2, 1, 5, 5,
+  ]);
+  expect(layout[1]?.cards[0]).toBe("dtap-3");
+  expect(layout[12]).toEqual({ label: "생후 6개월", cards: ["hepb-3"] });
+  await expect(cards(schedule)).toHaveCount(41);
+});
+
+test("AC-19.3 '예정'에서 hepb-3을 체크하면 hepb-3이 맨 아래 '접종 완료' 구역의 마지막 카드가 되고 카드는 28개 그대로이며 '지난 접종' 구역 제목은 0개다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+  });
+  await schedule.getByRole("tab", { name: "예정", exact: true }).click();
+  await expect(cards(schedule)).toHaveCount(28);
+
+  await checkboxOf(schedule, "hepb-3").click();
+
+  await expect(completedSection(schedule)).toHaveCount(1);
+  await expect(cards(schedule)).toHaveCount(28);
+  const order = await cardOrder(schedule);
+  expect(order[order.length - 1]).toBe("hepb-3");
+  expect((await outline(schedule)).slice(-3)).toEqual([
+    "group-header-150",
+    "schedule-completed-section",
+    "group-header-6",
+  ]);
+  await expect(pastSection(schedule)).toHaveCount(0);
+  await expect(cards(schedule).last()).toHaveAttribute(
+    "data-testid",
+    "schedule-card-hepb-3"
+  );
+});
+
+test("AC-19.4 저장값 완료 '2026-04-30|hepb-3'에서 hepb-3 체크를 해제하면 생후 6개월 그룹 첫 자리로 돌아오고 배지가 '곧 접종', '접종 완료' 구역 제목 0개, 그 아이의 완료 기록이 []이다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+    [COMPLETED_KEY]: "2026-04-30|hepb-3",
+  });
+  await expect(completedSection(schedule)).toHaveCount(1);
+  await expect(checkboxOf(schedule, "hepb-3")).toHaveAttribute(
+    "aria-checked",
+    "true"
+  );
+
+  await checkboxOf(schedule, "hepb-3").click();
+
+  await expect(completedSection(schedule)).toHaveCount(0);
+  await expect(checkboxOf(schedule, "hepb-3")).toHaveAttribute(
+    "aria-checked",
+    "false"
+  );
+  await expect(card(schedule, "hepb-3").getByTestId("status-badge")).toHaveText(
+    "곧 접종"
+  );
+  expect((await groupLayout(schedule))[1]?.cards[0]).toBe("hepb-3");
+  await expect.poll(() => completedOf(page)).toEqual([]);
+});
+
+test("AC-19.5 지난 카드 bcg-1을 체크하면 지난 구역 첫 카드 자리에 그대로 있고(카드 순서 불변) 배지가 '완료'이며 '접종 완료' 구역 제목은 0개, 그 아이의 완료 기록이 [bcg-1]이다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+  });
+  await expect(cards(schedule)).toHaveCount(41);
+  const before = await cardOrder(schedule);
+  expect(before[28]).toBe("bcg-1");
+
+  await checkboxOf(schedule, "bcg-1").click();
+
+  await expect(checkboxOf(schedule, "bcg-1")).toHaveAttribute(
+    "aria-checked",
+    "true"
+  );
+  await expect(card(schedule, "bcg-1").getByTestId("status-badge")).toHaveText(
+    "완료"
+  );
+  expect(await cardOrder(schedule)).toEqual(before);
+  await expect(completedSection(schedule)).toHaveCount(0);
+  await expect.poll(() => completedOf(page)).toEqual(["bcg-1"]);
+});
+
+test("AC-19.9 키보드: hepb-3 체크박스에서 Space를 누르면 체크되고 포커스가 다음 카드 dtap-3의 체크박스로 가며, 이어서 Enter를 누르면 dtap-3이 체크되고 포커스가 ipv-3의 체크박스로 간다(포커스가 body로 떨어지지 않음)", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const errors = collectErrors(page);
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+  });
+  await expect(cards(schedule)).toHaveCount(41);
+  await checkboxOf(schedule, "hepb-3").focus();
+  await expect(checkboxOf(schedule, "hepb-3")).toBeFocused();
+
+  await page.keyboard.press("Space");
+
+  await expect(checkboxOf(schedule, "hepb-3")).toHaveAttribute(
+    "aria-checked",
+    "true"
+  );
+  await expect(checkboxOf(schedule, "dtap-3")).toBeFocused();
+
+  await page.keyboard.press("Enter");
+
+  await expect(checkboxOf(schedule, "dtap-3")).toHaveAttribute(
+    "aria-checked",
+    "true"
+  );
+  await expect(checkboxOf(schedule, "ipv-3")).toBeFocused();
+  await expect(completedSection(schedule)).toHaveCount(1);
+  expect((await groupLayout(schedule))[12]?.cards).toEqual([
+    "hepb-3",
+    "dtap-3",
+  ]);
+  await expect.poll(() => completedOf(page)).toEqual(["hepb-3", "dtap-3"]);
+  expect(errors).toEqual([]);
+});
+
+test("AC-19.10 저장값 locale 'en'이면 hepb-3 체크박스 이름이 'Hepatitis B Dose 3: Vaccinated'이고, 누르면 배지 'Done'과 구역 제목 'Completed vaccinations'(heading level 2)가 'Past vaccinations' 위에 나온다", async ({
+  page,
+  seed,
+  screenOf,
+}) => {
+  const schedule = await openSchedule(page, screenOf, seed, {
+    [BIRTHDATE_KEY]: "2026-04-30",
+    [LOCALE_KEY]: "en",
+  });
+  const hepb3 = schedule.getByRole("checkbox", {
+    name: "Hepatitis B Dose 3: Vaccinated",
+    exact: true,
+  });
+  await expect(hepb3).toHaveAttribute("aria-checked", "false");
+
+  await hepb3.click();
+
+  await expect(hepb3).toHaveAttribute("aria-checked", "true");
+  await expect(card(schedule, "hepb-3").getByTestId("status-badge")).toHaveText(
+    "Done"
+  );
+  await expect(
+    schedule.getByRole("heading", {
+      level: 2,
+      name: "Completed vaccinations",
+    })
+  ).toHaveAttribute("data-testid", "schedule-completed-section");
+  await expect(pastSection(schedule)).toHaveText("Past vaccinations");
+  const sections = (await outline(schedule)).filter(
+    (testId) => !testId.startsWith("group-header-")
+  );
+  expect(sections).toEqual([
+    "schedule-completed-section",
+    "schedule-past-section",
+  ]);
 });

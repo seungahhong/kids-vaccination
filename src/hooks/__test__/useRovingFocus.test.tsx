@@ -5,18 +5,14 @@ import {
   screen,
 } from "@testing-library/react-native";
 import { type ReactElement, useState } from "react";
-import {
-  type KeyDownEvent,
-  type KeyEvent,
-  Pressable,
-  View,
-} from "react-native";
+import { Pressable, View } from "react-native";
 
 import { useRovingFocus as useNativeRovingFocus } from "@/hooks/useRovingFocus";
 import { useRovingFocus as useWebRovingFocus } from "@/hooks/useRovingFocus.web";
 
 import {
   hostWithProps,
+  keyDown,
   openSettings,
   sharedHostFocus,
 } from "../../../test-utils/render";
@@ -67,41 +63,6 @@ function WebRovingGroup({
       ))}
     </View>
   );
-}
-
-/** fireEvent로 onKeyDown에 넘길 KeyDownEvent(RN 0.88 타입)와 그 preventDefault spy */
-function keyDown(
-  key: string,
-  modifiers: Partial<Pick<KeyEvent, "altKey" | "ctrlKey" | "metaKey">> = {}
-) {
-  const preventDefault = jest.fn();
-  const event: KeyDownEvent = {
-    bubbles: true,
-    cancelable: true,
-    currentTarget: 0,
-    defaultPrevented: false,
-    dispatchConfig: { registrationName: "onKeyDown" },
-    eventPhase: 2,
-    isDefaultPrevented: () => false,
-    isPropagationStopped: () => false,
-    isTrusted: true,
-    nativeEvent: {
-      key,
-      code: key,
-      altKey: false,
-      ctrlKey: false,
-      metaKey: false,
-      shiftKey: false,
-      ...modifiers,
-    },
-    persist: () => {},
-    preventDefault,
-    stopPropagation: () => {},
-    target: 0,
-    timeStamp: 0,
-    type: "keydown",
-  };
-  return { event, preventDefault };
 }
 
 /** WebRovingGroup 항목의 tabIndex(문서 순서) */

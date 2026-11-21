@@ -3,6 +3,7 @@ import {
   isVaccinationData,
   loadVaccinations,
   VACCINATIONS,
+  VACCINATIONS_UPDATED_AT,
   validateVaccinationData,
 } from "@/lib/vaccinationData";
 import type { LocalizedText } from "@/types";
@@ -379,5 +380,25 @@ describe("R1-17 vaccinationData 회차 번호 중복", () => {
     expect(result.errors).toEqual([
       expect.stringContaining("vaccinations[1].doses[1].doseNumber"),
     ]);
+  });
+});
+
+// 면책 문구 옆에 보여 주는 "최종 업데이트" 날짜. 달력에 없는 날짜나 누락은 앱 시작 때 잡는다.
+describe("vaccinationData updatedAt", () => {
+  it("실제 데이터의 updatedAt은 2026-11-07이고 VACCINATIONS_UPDATED_AT으로 내보낸다", () => {
+    expect(VACCINATIONS_UPDATED_AT).toBe("2026-11-07");
+  });
+
+  it("updatedAt이 없거나 문자열이 아니거나 달력에 없는 날짜면 ok: false", () => {
+    for (const bad of [undefined, 20261107, "2026-11", "2026-02-30"]) {
+      const result = validateVaccinationData({
+        ...cloneData(),
+        updatedAt: bad,
+      });
+      expect(result).toEqual({
+        ok: false,
+        errors: ["updatedAt: 'YYYY-MM-DD' 날짜여야 한다"],
+      });
+    }
   });
 });

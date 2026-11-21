@@ -5,21 +5,21 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { useColorScheme } from "react-native";
 
 import { usePersistentState } from "@/hooks/usePersistentState";
 import { STORAGE_KEYS, themeCodec } from "@/lib/storage";
-import { resolveColorScheme } from "@/lib/themePreference";
+import { DEFAULT_THEME } from "@/lib/themePreference";
 import { THEMES, type ThemeTokens } from "@/theme/tokens";
 import type { ColorScheme, ThemePreference } from "@/types";
 
-// 테마 선호·해석·토큰 공급(설계서 §5.7·§6.2 3단 해석): preference(저장, 기본 system) × useColorScheme()(OS) → resolveColorScheme → THEMES[scheme].
-// 선호가 system이면 OS 변경이 useColorScheme 구독으로 재시작 없이 반영된다(AC-11.5·11.7). Appearance.setColorScheme override는 쓰지 않는다.
-// 손상 저장값은 system으로 읽고 덮어쓰지 않는다(AC-18.4).
+// 테마 선호·토큰 공급(설계서 §5.7·§6.2). v1.5(U-24): 선호는 라이트·다크 2개이고 그대로 화면 색 모드(scheme)가 된다.
+// OS 색 모드(useColorScheme)는 읽지 않는다 — 저장값이 없거나 손상됐으면(예전 'system' 포함) 기본값 라이트다(AC-11.2·11.5·11.7).
+// 손상 저장값은 덮어쓰지 않는다(AC-18.4). 설정 화면 ThemeSelector와 헤더 테마 스위치가 같은 setPreference를 쓴다(FR-15).
 
 export type ThemeContextValue = {
   readonly preference: ThemePreference;
   readonly setPreference: (p: ThemePreference) => void;
+  /** 화면 색 모드. 선호와 같은 값이다(시스템 해석 단계가 없어짐, U-24) */
   readonly scheme: ColorScheme;
   readonly tokens: ThemeTokens;
   readonly isReady: boolean;
@@ -32,20 +32,17 @@ export function ThemeProvider(props: { children: ReactNode }): ReactElement {
     STORAGE_KEYS.theme,
     themeCodec
   );
-  // RN 0.88 useColorScheme(): 'light' | 'dark' | null(네이티브 Appearance 없음) — null/undefined는 light로 해석
-  const systemScheme = useColorScheme();
-  const preference: ThemePreference = value ?? "system";
-  const scheme = resolveColorScheme(preference, systemScheme);
+  const preference: ThemePreference = value ?? DEFAULT_THEME;
 
   const contextValue = useMemo<ThemeContextValue>(
     () => ({
       preference,
       setPreference: setValue,
-      scheme,
-      tokens: THEMES[scheme],
+      scheme: preference,
+      tokens: THEMES[preference],
       isReady,
     }),
-    [preference, setValue, scheme, isReady]
+    [preference, setValue, isReady]
   );
 
   return (

@@ -4,7 +4,8 @@
     "home": "首页",
     "schedule": "接种日程",
     "settings": "设置",
-    "disclaimer": "此信息仅供参考，准确内容请咨询儿科医生。"
+    "disclaimer": "此信息仅供参考，准确内容请咨询儿科医生。",
+    "dataSource": "来源：韩国疾病管理厅《2026年国家预防接种指南》、大韩小儿青少年科学会推荐日程 · 最后更新：{date}"
   },
   "home": {
     "title": "宝宝疫苗接种\n日程管理",
@@ -21,7 +22,14 @@
     "birthdateLabel": "出生日期",
     "selectBirthdate": "选择出生日期",
     "pickerConfirm": "确定",
-    "pickerCancel": "取消"
+    "pickerCancel": "取消",
+    "savedChildren": "已保存的孩子",
+    "addChild": "添加孩子",
+    "childName": "名字",
+    "childNamePlaceholder": "例如：老大",
+    "optional": "可选",
+    "required": "必填",
+    "childrenFull": "最多可保存 {max} 个孩子。请先在设置中删除一个孩子再添加。"
   },
   "schedule": {
     "title": "疫苗接种日程",
@@ -40,7 +48,11 @@
     "filterLabel": "接种状态筛选",
     "pastSection": "已过接种",
     "national": "必需",
-    "optional": "可选"
+    "optional": "可选",
+    "completed": "已接种",
+    "completedSection": "已完成接种",
+    "markCompleted": "已接种",
+    "childSelector": "选择孩子"
   },
   "settings": {
     "title": "设置",
@@ -55,8 +67,11 @@
     "resetDone": "重置完成",
     "cancel": "取消",
     "confirm": "确认",
-    "themeSystem": "跟随系统",
     "themeLight": "浅色",
-    "themeDark": "深色"
+    "themeDark": "深色",
+    "childrenCount": "已保存 {count} 个孩子(最多 {max} 个)",
+    "delete": "删除",
+    "deleteChild": "删除{name}",
+    "deleteChildConfirm": "要删除{name}的信息吗？"
   }
 }

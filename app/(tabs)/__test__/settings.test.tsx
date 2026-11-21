@@ -1,32 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, screen, within } from "@testing-library/react-native";
 import * as ReactNative from "react-native";
-import { AccessibilityInfo, Platform } from "react-native";
 
 import { STORAGE_KEYS, type StorageKey } from "@/lib/storage";
 import { darkTokens, lightTokens } from "@/theme/tokens";
 
 import {
-  fireLayout,
   flushRouterMacrotask,
   getTabButtons,
-  hostWithProps,
   mockSystemScheme,
   openSettings,
   renderApp,
   restoreDefaultImplementationAfterEach,
   seedStorage,
-  sharedHostFocus,
   TAB_NAMES_KO,
 } from "../../../test-utils/render";
 
 // 설정 화면(FR-08 테마, FR-09 언어, FR-10 아기 정보·초기화, FR-12 면책, 영속화 공통) 화면 수준 테스트.
-// TDD 판정: AC-14.5, AC-18.3(화면). 거울([unit], 공식 판정 미사용): AC-11.1~11.4, 12.1, 14.1, 14.2, 14.4, 16.2(P10),
+// TDD 판정: AC-14.5, AC-18.3(화면), AC-19.7. 거울([unit], 공식 판정 미사용): AC-11.1~11.4, 12.1, 14.1, 14.2, 14.4, 16.2(P10),
 // 홈·일정 화면을 함께 관찰하는 AC-14.3·16.3(P11).
 // renderApp은 실제 app/ 디렉터리를 renderRouter로 로드하므로 루트 레이아웃·LoadingGate·탭이 모두 포함된다(설계서 §9.5).
 // 설정 화면 요소는 screen-settings 범위(within)에서 찾고, 하단 탭은 role button + 이름으로 전역 조회한다(P7 메모).
 
-const THEME_NAMES_KO = ["시스템", "라이트", "다크"] as const;
+const THEME_NAMES_KO = ["라이트", "다크"] as const;
 const LOCALE_NAMES = ["한국어", "English", "日本語", "中文"] as const;
 const TAB_NAMES_EN = ["Home", "Schedule", "Settings"] as const;
 const DISCLAIMER_KO =
@@ -34,7 +30,6 @@ const DISCLAIMER_KO =
 const DISCLAIMER_EN =
   "This information is for reference only. Please consult a pediatrician for accurate medical advice.";
 const EMPTY_SCHEDULE_KO = "생년월일을 먼저 입력해주세요";
-const RESET_CONFIRM_KO = "아기 생년월일 정보를 삭제할까요?";
 /** 원본 웹앱의 "전체 초기화" 확인 문구 — 동작(생년월일만 삭제)과 맞지 않아 U-06에서 교체했다 */
 const LEGACY_RESET_CONFIRM_KO = "모든 데이터를 초기화하시겠습니까?";
 
@@ -50,23 +45,23 @@ function countKeyCalls(
   return calls.filter((args) => args[0] === key).length;
 }
 
-describe("AC-11.1 [unit] 테마 옵션 초기 상태(라이트 OS, 저장값 없음)", () => {
-  it("AC-11.1 [unit] /settings에 진입하면 테마 옵션 3개(시스템·라이트·다크)가 role radio이고 theme-option-system만 checked이며 screen-settings 배경은 라이트 background 토큰이다", async () => {
+// FR-08 테마(v1.5 U-24): "시스템"을 없애고 라이트로 합쳤다. 선택지는 라이트·다크 2개이고 기본값은 라이트이며 OS 색 모드는 따르지 않는다.
+describe("AC-11.1 [unit] 테마 옵션 초기 상태(저장값 없음)", () => {
+  it("AC-11.1 [unit] /settings에 진입하면 테마 옵션 2개(라이트·다크)가 role radio이고 theme-option-light만 checked이며 '시스템' 옵션은 없고 screen-settings 배경은 라이트 background 토큰이다", async () => {
     mockSystemScheme("light");
     const { settings, container } = await openSettings();
 
     const radios = settings.getAllByRole("radio", {
       name: /^(시스템|라이트|다크)$/,
     });
-    expect(radios).toHaveLength(3);
+    expect(radios).toHaveLength(2);
     THEME_NAMES_KO.forEach((name, index) => {
       expect(radios[index]).toHaveAccessibleName(name);
     });
-    expect(settings.getByRole("radio", { name: "시스템" })).toBeChecked();
-    expect(settings.getByRole("radio", { name: "라이트" })).not.toBeChecked();
+    expect(settings.getByRole("radio", { name: "라이트" })).toBeChecked();
     expect(settings.getByRole("radio", { name: "다크" })).not.toBeChecked();
-    expect(settings.getByTestId("theme-option-system")).toBeChecked();
-    expect(settings.getByTestId("theme-option-light")).not.toBeChecked();
+    expect(settings.queryByTestId("theme-option-system")).toBeNull();
+    expect(settings.getByTestId("theme-option-light")).toBeChecked();
     expect(settings.getByTestId("theme-option-dark")).not.toBeChecked();
     // role="radiogroup" 컨테이너는 네이티브에서 접근성 요소가 아니라(accessible 미지정) RNTL role 조회 대상이 아니다 — 웹 DOM role은 E2E가 본다
     expect(container).toHaveStyle({
@@ -76,79 +71,69 @@ describe("AC-11.1 [unit] 테마 옵션 초기 상태(라이트 OS, 저장값 없
 });
 
 describe("AC-11.2 [unit] 다크 OS 초기 상태(저장값 없음)", () => {
-  it("AC-11.2 [unit] 다크 OS·저장값 없음으로 /settings에 진입하면 theme-option-system이 checked이고 screen-settings 배경은 다크 background 토큰이다", async () => {
+  it("AC-11.2 [unit] 다크 OS·저장값 없음으로 /settings에 진입해도 theme-option-light가 checked이고 screen-settings 배경은 라이트 background 토큰이다(OS 색 모드를 따르지 않음, U-24)", async () => {
     mockSystemScheme("dark");
     const { settings, container } = await openSettings();
 
-    expect(settings.getByRole("radio", { name: "시스템" })).toBeChecked();
-    expect(settings.getByTestId("theme-option-system")).toBeChecked();
-    expect(container).toHaveStyle({ backgroundColor: darkTokens.background });
+    expect(settings.getByRole("radio", { name: "라이트" })).toBeChecked();
+    expect(settings.getByTestId("theme-option-light")).toBeChecked();
+    expect(container).toHaveStyle({ backgroundColor: lightTokens.background });
   });
 });
 
-describe("AC-11.3 [unit] 다크 OS에서 라이트 고정과 유지", () => {
-  it("AC-11.3 [unit] 다크 OS에서 '라이트'를 누르면 배경이 라이트 background, 저장값 'light', theme-option-light checked이고, 다시 렌더(새로고침)해도 유지된다", async () => {
-    mockSystemScheme("dark");
+describe("AC-11.3 [unit] 다크 고정과 유지", () => {
+  it("AC-11.3 [unit] '다크'를 누르면 배경이 다크 background, 저장값 'dark', theme-option-dark checked이고, 다시 렌더(새로고침)해도 유지된다", async () => {
+    mockSystemScheme("light");
     const first = await openSettings();
-    expect(first.container).toHaveStyle({
-      backgroundColor: darkTokens.background,
-    });
-
-    await fireEvent.press(
-      first.settings.getByRole("radio", { name: "라이트" })
-    );
-
     expect(first.container).toHaveStyle({
       backgroundColor: lightTokens.background,
     });
-    expect(first.settings.getByRole("radio", { name: "라이트" })).toBeChecked();
-    expect(first.settings.getByTestId("theme-option-light")).toBeChecked();
-    expect(first.settings.getByTestId("theme-option-system")).not.toBeChecked();
+
+    await fireEvent.press(first.settings.getByRole("radio", { name: "다크" }));
+
+    expect(first.container).toHaveStyle({
+      backgroundColor: darkTokens.background,
+    });
+    expect(first.settings.getByRole("radio", { name: "다크" })).toBeChecked();
+    expect(first.settings.getByTestId("theme-option-dark")).toBeChecked();
+    expect(first.settings.getByTestId("theme-option-light")).not.toBeChecked();
     await flushRouterMacrotask();
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       STORAGE_KEYS.theme,
-      "light"
+      "dark"
     );
-    expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("light");
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("dark");
 
     // 새로고침: 언마운트 뒤 같은 저장소로 다시 렌더한다
     await first.app.unmount();
     const second = await openSettings();
 
     expect(second.container).toHaveStyle({
-      backgroundColor: lightTokens.background,
+      backgroundColor: darkTokens.background,
     });
-    expect(
-      second.settings.getByRole("radio", { name: "라이트" })
-    ).toBeChecked();
-    expect(second.settings.getByTestId("theme-option-light")).toBeChecked();
+    expect(second.settings.getByRole("radio", { name: "다크" })).toBeChecked();
+    expect(second.settings.getByTestId("theme-option-dark")).toBeChecked();
   });
 });
 
-describe("AC-11.4 [unit] 다크 고정 뒤 시스템 복귀", () => {
-  it("AC-11.4 [unit] 라이트 OS에서 '다크'를 누르면 배경이 다크 background·저장값 'dark'이고, 이어서 '시스템'을 누르면 배경이 라이트 background·저장값 'system'·theme-option-system checked다", async () => {
-    mockSystemScheme("light");
+describe("AC-11.4 [unit] 다크에서 라이트 복귀", () => {
+  it("AC-11.4 [unit] 저장값 'dark'에서 '라이트'를 누르면 배경이 라이트 background·저장값 'light'·theme-option-light checked다", async () => {
+    await seedStorage({ [STORAGE_KEYS.theme]: "dark" });
     const { settings, container } = await openSettings();
-
-    await fireEvent.press(settings.getByRole("radio", { name: "다크" }));
-
     expect(container).toHaveStyle({ backgroundColor: darkTokens.background });
-    expect(settings.getByTestId("theme-option-dark")).toBeChecked();
-    await flushRouterMacrotask();
-    expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("dark");
 
-    await fireEvent.press(settings.getByRole("radio", { name: "시스템" }));
+    await fireEvent.press(settings.getByRole("radio", { name: "라이트" }));
 
     expect(container).toHaveStyle({
       backgroundColor: lightTokens.background,
     });
-    expect(settings.getByTestId("theme-option-system")).toBeChecked();
+    expect(settings.getByTestId("theme-option-light")).toBeChecked();
     expect(settings.getByTestId("theme-option-dark")).not.toBeChecked();
     await flushRouterMacrotask();
-    expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("system");
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("light");
     expect(AsyncStorage.setItem).toHaveBeenLastCalledWith(
       STORAGE_KEYS.theme,
-      "system"
+      "light"
     );
   });
 });
@@ -213,62 +198,68 @@ describe("AC-12.1 [unit] 언어 옵션과 English 전환", () => {
   });
 });
 
-describe("AC-14.1 [unit] 설정 생년월일 표시", () => {
-  it("AC-14.1 [unit] (a) 저장값 생년월일 '2024-01-31'로 /settings에 진입하면 settings-birthdate 텍스트가 '생년월일: 2024-01-31'이다", async () => {
+// FR-10·FR-16(v1.7 U-28): "아기 정보"는 저장된 아이 목록과 아이별 삭제다(ChildrenSection). 예전 생년월일 키 시드는 하이드레이션에서
+// 이름 없는 아이 1명(이름표 = 생년월일)으로 옮겨진다. 줄 안의 포커스·결과 고지는 src/components/settings/__test__/ChildrenSection.test.tsx.
+const RESET_CHILD_CONFIRM_KO = "2024-01-31 정보를 삭제할까요?";
+
+describe("AC-14.1 [unit] 설정 아기 정보 표시", () => {
+  it("AC-14.1 [unit] (a) 예전 저장값 생년월일 '2024-01-31'로 /settings에 진입하면 아이 수가 '저장된 아이 1명 (최대 10명)'이고 이름표 '2024-01-31' 줄과 '2024-01-31 삭제' 버튼이 있다", async () => {
     await seedStorage({ [STORAGE_KEYS.birthdate]: "2024-01-31" });
     const { settings } = await openSettings();
 
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: 2024-01-31$/
+    expect(settings.getByTestId("settings-children-count")).toHaveTextContent(
+      "저장된 아이 1명 (최대 10명)"
     );
-  });
-
-  it("AC-14.1 [unit] (b) 저장값이 없으면 settings-birthdate 텍스트가 '생년월일: -'다", async () => {
-    const { settings } = await openSettings();
-
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: -$/
-    );
-  });
-});
-
-describe("AC-14.2 [unit] 초기화 확인 UI와 취소", () => {
-  it("AC-14.2 [unit] 저장값 생년월일 '2024-01-31'에서 '생년월일 삭제'(reset-button)를 누르면 확인 문구와 '확인'(reset-confirm)·'취소'(reset-cancel) 버튼이 보이고 원본 문구는 0개이며, '취소'를 누르면 확인 UI가 0개가 되고 생년월일 표시·저장값 '2024-01-31'이 유지된다", async () => {
-    await seedStorage({ [STORAGE_KEYS.birthdate]: "2024-01-31" });
-    const { settings } = await openSettings();
-    const resetButton = settings.getByRole("button", { name: "생년월일 삭제" });
-    expect(resetButton).toBe(settings.getByTestId("reset-button"));
-    expect(settings.queryByText(RESET_CONFIRM_KO)).toBeNull();
-
-    await fireEvent.press(resetButton);
-
-    expect(settings.getByText(RESET_CONFIRM_KO)).toBeOnTheScreen();
-    expect(
-      settings.queryAllByText(LEGACY_RESET_CONFIRM_KO, { exact: false })
-    ).toHaveLength(0);
-    const confirm = settings.getByRole("button", { name: "확인" });
-    const cancel = settings.getByRole("button", { name: "취소" });
-    expect(confirm).toBe(settings.getByTestId("reset-confirm"));
-    expect(cancel).toBe(settings.getByTestId("reset-cancel"));
-
-    await fireEvent.press(cancel);
-
-    expect(settings.queryByTestId("reset-confirm")).toBeNull();
-    expect(settings.queryByTestId("reset-cancel")).toBeNull();
-    expect(settings.queryByText(RESET_CONFIRM_KO)).toBeNull();
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: 2024-01-31$/
-    );
-    await flushRouterMacrotask();
-    expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
-    expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBe(
+    expect(settings.getByTestId("child-row-label")).toHaveTextContent(
       "2024-01-31"
     );
+    expect(
+      settings.getByRole("button", { name: "2024-01-31 삭제" })
+    ).toBeOnTheScreen();
+  });
+
+  it("AC-14.1 [unit] (b) 저장값이 없으면 아이 수가 '저장된 아이 0명 (최대 10명)'이고 아이 줄·삭제 버튼은 0개다", async () => {
+    const { settings } = await openSettings();
+
+    expect(settings.getByTestId("settings-children-count")).toHaveTextContent(
+      "저장된 아이 0명 (최대 10명)"
+    );
+    expect(settings.queryAllByTestId("child-row")).toHaveLength(0);
+    expect(settings.queryAllByTestId("child-delete")).toHaveLength(0);
   });
 });
 
-describe("AC-14.3 [unit] 생년월일만 삭제(테마·언어 유지)와 홈·일정 반영", () => {
-  it("AC-14.3 [unit] 라이트 OS에서 저장값 생년월일 '2024-01-31'·theme 'dark'·locale 'ko'로 '생년월일 삭제'→'확인'을 누르면 settings-birthdate가 '생년월일: -', 저장값 생년월일 null·theme 'dark'·locale 'ko', 배경은 다크 background로 유지되고 홈 탭의 existing-birthdate-shortcut 0개, 일정 탭은 '생년월일을 먼저 입력해주세요'다", async () => {
+describe("AC-14.2 [unit] 삭제 확인 UI와 취소", () => {
+  it("AC-14.2 [unit] '2024-01-31 삭제'를 누르면 확인 문구 '2024-01-31 정보를 삭제할까요?'와 확인·취소 버튼이 보이고 원본 문구는 0개이며, '취소'를 누르면 확인 UI가 0개가 되고 아이와 저장값이 그대로다", async () => {
+    await seedStorage({ [STORAGE_KEYS.birthdate]: "2024-01-31" });
+    const { settings } = await openSettings();
+    await flushRouterMacrotask();
+    const stored = await AsyncStorage.getItem(STORAGE_KEYS.children);
+
+    await fireEvent.press(
+      settings.getByRole("button", { name: "2024-01-31 삭제" })
+    );
+
+    expect(settings.getByText(RESET_CHILD_CONFIRM_KO)).toBeOnTheScreen();
+    expect(settings.getByRole("button", { name: "확인" })).toBe(
+      settings.getByTestId("child-delete-confirm")
+    );
+    expect(settings.getByRole("button", { name: "취소" })).toBe(
+      settings.getByTestId("child-delete-cancel")
+    );
+    expect(settings.queryAllByText(LEGACY_RESET_CONFIRM_KO)).toHaveLength(0);
+
+    await fireEvent.press(settings.getByRole("button", { name: "취소" }));
+    await flushRouterMacrotask();
+
+    expect(settings.queryByTestId("child-delete-confirm")).toBeNull();
+    expect(settings.getAllByTestId("child-row")).toHaveLength(1);
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBe(stored);
+  });
+});
+
+describe("AC-14.3 [unit] 아이 삭제(테마·언어 유지)와 홈·일정 반영", () => {
+  it("AC-14.3 [unit] 라이트 OS에서 저장값 생년월일 '2024-01-31'·theme 'dark'·locale 'ko'로 '2024-01-31 삭제'→'확인'을 누르면 아이 0명·저장 키 없음·theme 'dark'·locale 'ko'·다크 배경이 유지되고, 홈 탭은 아이 추가 폼(목록 없음), 일정 탭은 빈 상태 문구다", async () => {
     mockSystemScheme("light");
     await seedStorage({
       [STORAGE_KEYS.birthdate]: "2024-01-31",
@@ -276,78 +267,62 @@ describe("AC-14.3 [unit] 생년월일만 삭제(테마·언어 유지)와 홈·�
       [STORAGE_KEYS.locale]: "ko",
     });
     const { settings, container } = await openSettings();
-    expect(container).toHaveStyle({ backgroundColor: darkTokens.background });
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: 2024-01-31$/
-    );
 
     await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
+      settings.getByRole("button", { name: "2024-01-31 삭제" })
     );
     await fireEvent.press(settings.getByRole("button", { name: "확인" }));
     await flushRouterMacrotask();
 
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: -$/
+    expect(settings.queryAllByTestId("child-row")).toHaveLength(0);
+    expect(settings.getByTestId("settings-children-count")).toHaveTextContent(
+      "저장된 아이 0명 (최대 10명)"
     );
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBeNull();
     expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBeNull();
     expect(await AsyncStorage.getItem(STORAGE_KEYS.theme)).toBe("dark");
     expect(await AsyncStorage.getItem(STORAGE_KEYS.locale)).toBe("ko");
     expect(container).toHaveStyle({ backgroundColor: darkTokens.background });
 
-    await fireEvent.press(screen.getByRole("button", { name: "홈" }));
-    expect(screen).toHavePathname("/");
+    const [homeTab, scheduleTab] = getTabButtons(TAB_NAMES_KO);
+    if (!homeTab || !scheduleTab) throw new Error("탭이 없다");
+    await fireEvent.press(homeTab);
     const home = within(await screen.findByTestId("screen-home"));
-    // 홈이 완전히 렌더된 뒤(제출 버튼 표시) 숨김 요소까지 포함해 0개를 판정한다
-    expect(home.getByTestId("birthdate-submit")).toBeOnTheScreen();
-    expect(
-      screen.queryAllByTestId("existing-birthdate-shortcut", {
-        includeHiddenElements: true,
-      })
-    ).toHaveLength(0);
-
-    await fireEvent.press(screen.getByRole("button", { name: "접종 일정" }));
-    expect(screen).toHavePathname("/schedule");
+    expect(home.getByTestId("home-add-child")).toBeOnTheScreen();
+    expect(home.queryAllByTestId("child-shortcut")).toHaveLength(0);
+    await fireEvent.press(scheduleTab);
     const schedule = within(await screen.findByTestId("screen-schedule"));
     expect(schedule.getByText(EMPTY_SCHEDULE_KO)).toBeOnTheScreen();
   });
 });
 
-describe("AC-14.4 [unit] 저장값 없이 삭제 확인", () => {
-  it("AC-14.4 [unit] 저장값 없이 '생년월일 삭제'→'확인'을 눌러도 settings-birthdate는 '생년월일: -'로 유지되고 확인 UI 0개, screen-settings가 계속 보이며 console.error가 0회다", async () => {
+describe("AC-14.4 [unit] 저장값 없이 설정 진입", () => {
+  it("AC-14.4 [unit] 저장값 없이 /settings에 진입하면 지울 아이가 없어 삭제 버튼·확인 UI가 0개이고 screen-settings가 보이며 console.error가 0회다", async () => {
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     const { settings } = await openSettings();
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: -$/
-    );
-    // E2E의 pageerror·console error 기록에 대응: 누르기 직전부터 console.error를 기록한다(처리되지 않은 예외는 press가 throw해 테스트가 실패한다)
-    const consoleError = jest.spyOn(console, "error");
 
-    await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
-    );
-    await fireEvent.press(settings.getByRole("button", { name: "확인" }));
-    await flushRouterMacrotask();
-
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: -$/
-    );
-    expect(settings.queryByTestId("reset-confirm")).toBeNull();
-    expect(settings.queryByTestId("reset-cancel")).toBeNull();
+    expect(settings.queryAllByTestId("child-delete")).toHaveLength(0);
+    expect(settings.queryByTestId("child-delete-confirm")).toBeNull();
     expect(screen.getByTestId("screen-settings")).toBeOnTheScreen();
     expect(consoleError).not.toHaveBeenCalled();
   });
 });
 
-describe("AC-14.5 초기화는 앱 내 확인 후 생년월일만 삭제", () => {
-  it("AC-14.5 저장값 생년월일 '2024-01-31'에서 초기화→확인을 수행하면 Alert.alert 0회, AsyncStorage.removeItem('vaccination-app-birthdate') 1회이고 locale·theme 키의 removeItem·setItem은 0회다", async () => {
+describe("AC-14.5 삭제는 앱 내 확인 후 그 아이만 지운다", () => {
+  it("AC-14.5 저장값 생년월일 '2024-01-31'에서 아이 삭제→확인을 수행하면 Alert.alert 0회, 마지막 아이라 AsyncStorage.removeItem('vaccination-app-children') 1회이고 locale·theme 키의 removeItem·setItem은 0회다", async () => {
     const alert = jest
       .spyOn(ReactNative.Alert, "alert")
       .mockImplementation(() => {});
     await seedStorage({ [STORAGE_KEYS.birthdate]: "2024-01-31" });
     const { settings } = await openSettings();
+    await flushRouterMacrotask();
+    jest.mocked(AsyncStorage.removeItem).mockClear();
+    jest.mocked(AsyncStorage.setItem).mockClear();
 
     await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
+      settings.getByRole("button", { name: "2024-01-31 삭제" })
     );
     await fireEvent.press(settings.getByRole("button", { name: "확인" }));
     await flushRouterMacrotask();
@@ -355,12 +330,55 @@ describe("AC-14.5 초기화는 앱 내 확인 후 생년월일만 삭제", () =>
     expect(alert).not.toHaveBeenCalled();
     const removeCalls = jest.mocked(AsyncStorage.removeItem).mock.calls;
     const setCalls = jest.mocked(AsyncStorage.setItem).mock.calls;
-    expect(countKeyCalls(removeCalls, STORAGE_KEYS.birthdate)).toBe(1);
+    expect(countKeyCalls(removeCalls, STORAGE_KEYS.children)).toBe(1);
     for (const key of [STORAGE_KEYS.locale, STORAGE_KEYS.theme]) {
       expect(countKeyCalls(removeCalls, key)).toBe(0);
       expect(countKeyCalls(setCalls, key)).toBe(0);
     }
-    expect(await AsyncStorage.getItem(STORAGE_KEYS.birthdate)).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBeNull();
+  });
+});
+
+// AC-19.7 (FR-14 · v1.7 FR-16): 완료 기록은 아이 안에 있으므로 아이를 지우면 기록도 함께 지워진다. 예전 생년월일·완료 키는 이전 때 지워진다.
+describe("AC-19.7 아이 삭제 시 접종 완료 기록도 삭제", () => {
+  it("AC-19.7 예전 저장값 생년월일 '2026-04-30'·완료 '2026-04-30|hepb-3'(아이 1명으로 이전)에서 삭제→확인을 누르면 아이 목록 키가 없어지고 예전 완료 키도 남지 않는다", async () => {
+    await seedStorage({
+      [STORAGE_KEYS.birthdate]: "2026-04-30",
+      [STORAGE_KEYS.completed]: "2026-04-30|hepb-3",
+    });
+    const { settings } = await openSettings();
+    await flushRouterMacrotask();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toContain(
+      "hepb-3"
+    );
+
+    await fireEvent.press(
+      settings.getByRole("button", { name: "2026-04-30 삭제" })
+    );
+    await fireEvent.press(settings.getByRole("button", { name: "확인" }));
+    await flushRouterMacrotask();
+
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.completed)).toBeNull();
+  });
+
+  it("AC-19.7 '취소'를 누르면 완료 기록이 그대로다", async () => {
+    await seedStorage({
+      [STORAGE_KEYS.birthdate]: "2026-04-30",
+      [STORAGE_KEYS.completed]: "2026-04-30|hepb-3",
+    });
+    const { settings } = await openSettings();
+    await flushRouterMacrotask();
+
+    await fireEvent.press(
+      settings.getByRole("button", { name: "2026-04-30 삭제" })
+    );
+    await fireEvent.press(settings.getByRole("button", { name: "취소" }));
+    await flushRouterMacrotask();
+
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.children)).toContain(
+      "hepb-3"
+    );
   });
 });
 
@@ -461,111 +479,8 @@ describe("G-6 (c) 언어 옵션 role·접근 이름 조회", () => {
 // 대상 훅 옆 src/hooks/__test__/useRovingFocus.test.tsx로 옮겼다(리뷰 R2-04, U-08).
 // ---------------------------------------------------------------------------
 
-// R1-03: 초기화 확인 단계를 열고 닫을 때 포커스가 사라지지 않고(웹에서 body로 떨어지지 않음) 확인 문구가 보조기기에 전달된다.
-// 확인 상자는 확인 문구로 이름 붙은 role="group"이다. 열면 네이티브는 화면 낭독기 포커스(sendAccessibilityEvent 'focus')를
-// 확인 문구로, 웹은 DOM 포커스를 확인 상자(tabIndex -1)로 옮기고, 닫으면(취소·확인) 둘 다 reset-button으로 돌려준다.
-// V-01(Android 에뮬레이터 실측): 대상은 그 커밋에서 새로 마운트되는데, 커밋 직후(effect)에 보낸 포커스 이벤트는 네이티브 뷰가
-// 붙기 전에 실행돼 버려졌다(RN "Unable to find viewState … for sendAccessibilityEvent"). 그래서 네이티브는 대상의 onLayout
-// (네이티브 마운트·배치 뒤)에서 1회만 옮긴다. 테스트는 fireLayout으로 그 시점을 연다. 웹은 DOM이 커밋과 함께 붙으므로 그대로 둔다.
-// 실제 브라우저의 document.activeElement는 e2e/review-r1-a11y.spec.ts가 본다.
-describe("R1-03 초기화 확인 단계의 포커스 이동과 확인 문구 고지", () => {
-  it("R1-03·V-01 '생년월일 삭제'를 누르면 확인 상자가 확인 문구(nativeID)로 이름 붙은 role group이고, 화면 낭독기 포커스는 확인 문구가 배치된 뒤(onLayout) 그리로 가며, '취소'·'확인' 뒤에는 reset-button이 배치된 뒤 돌아온다(첫 렌더·재배치에서는 옮기지 않음)", async () => {
-    const sendEvent = jest.mocked(AccessibilityInfo.sendAccessibilityEvent);
-    sendEvent.mockClear();
-    await seedStorage({ [STORAGE_KEYS.birthdate]: "2024-01-31" });
-    const { settings } = await openSettings();
-    await fireLayout(settings.getByTestId("reset-button"));
-    expect(sendEvent).not.toHaveBeenCalled();
-
-    await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
-    );
-
-    const question = settings.getByText(RESET_CONFIRM_KO);
-    const questionId: unknown = question.props.nativeID;
-    expect(typeof questionId).toBe("string");
-    const box = question.parent;
-    expect(box).not.toBeNull();
-    expect(box).toHaveProp("role", "group");
-    expect(box).toHaveProp("aria-labelledby", questionId);
-    expect(box).toHaveAccessibleName(RESET_CONFIRM_KO);
-    // 커밋 직후에는 확인 문구의 네이티브 뷰가 아직 없으므로 보내지 않는다(V-01)
-    expect(sendEvent).not.toHaveBeenCalled();
-
-    await fireLayout(question);
-    expect(sendEvent).toHaveBeenCalledTimes(1);
-    expect(sendEvent).toHaveBeenLastCalledWith(
-      hostWithProps({ nativeID: questionId }),
-      "focus"
-    );
-    // 회전·글자 크기 변경 같은 재배치에서는 다시 옮기지 않는다
-    await fireLayout(question);
-    expect(sendEvent).toHaveBeenCalledTimes(1);
-
-    await fireEvent.press(settings.getByRole("button", { name: "취소" }));
-    expect(sendEvent).toHaveBeenCalledTimes(1);
-    await fireLayout(settings.getByTestId("reset-button"));
-
-    expect(sendEvent).toHaveBeenCalledTimes(2);
-    expect(sendEvent).toHaveBeenLastCalledWith(
-      hostWithProps({ testID: "reset-button" }),
-      "focus"
-    );
-
-    await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
-    );
-    await fireLayout(settings.getByText(RESET_CONFIRM_KO));
-    expect(sendEvent).toHaveBeenCalledTimes(3);
-    expect(sendEvent).toHaveBeenLastCalledWith(
-      hostWithProps({ nativeID: questionId }),
-      "focus"
-    );
-    await fireEvent.press(settings.getByRole("button", { name: "확인" }));
-    await flushRouterMacrotask();
-
-    expect(settings.getByTestId("settings-birthdate")).toHaveTextContent(
-      /^생년월일: -$/
-    );
-    expect(sendEvent).toHaveBeenCalledTimes(3);
-    await fireLayout(settings.getByTestId("reset-button"));
-    expect(sendEvent).toHaveBeenCalledTimes(4);
-    expect(sendEvent).toHaveBeenLastCalledWith(
-      hostWithProps({ testID: "reset-button" }),
-      "focus"
-    );
-  });
-
-  it("R1-03 웹 분기(Platform.OS 'web')에서는 열 때 확인 상자(role group, tabIndex -1)에, 닫을 때 reset-button에 DOM 포커스(focus())를 커밋 직후 1회 주고, 이어지는 배치(onLayout)로는 다시 옮기지 않으며 화면 낭독기 이벤트는 보내지 않는다", async () => {
-    const focus = await sharedHostFocus();
-    const sendEvent = jest.mocked(AccessibilityInfo.sendAccessibilityEvent);
-    sendEvent.mockClear();
-    const { settings } = await openSettings();
-    // 플랫폼은 포커스를 옮기는 시점에 읽으므로 첫 렌더 뒤에 바꿔 웹 분기를 검증한다(설계서 §7.1의 replaceProperty 방식)
-    jest.replaceProperty(Platform, "OS", "web");
-
-    await fireEvent.press(
-      settings.getByRole("button", { name: "생년월일 삭제" })
-    );
-
-    expect(focus).toHaveBeenCalledTimes(1);
-    expect(focus.mock.contexts[0]).toEqual(
-      hostWithProps({ role: "group", tabIndex: -1 })
-    );
-    await fireLayout(settings.getByText(RESET_CONFIRM_KO));
-    expect(focus).toHaveBeenCalledTimes(1);
-
-    await fireEvent.press(settings.getByRole("button", { name: "취소" }));
-
-    expect(focus).toHaveBeenCalledTimes(2);
-    expect(focus.mock.contexts[1]).toEqual(
-      hostWithProps({ testID: "reset-button" })
-    );
-    await fireLayout(settings.getByTestId("reset-button"));
-    expect(focus).toHaveBeenCalledTimes(2);
-    expect(sendEvent).not.toHaveBeenCalled();
-  });
-});
+// R1-03(초기화 확인 단계의 포커스): v1.7에서 아이별 삭제로 바뀌어 줄 단위 테스트로 옮겼다
+// (src/components/settings/__test__/ChildrenSection.test.tsx의 R1-03·V-01·U-28·R2-06). 실제 브라우저 포커스는 e2e/review-r1-a11y.spec.ts.
 
 // R1-09: 설정 섹션 제목(테마·언어·아기 정보)은 role heading + aria-level 2다(RNW <h2>). 화면 제목만 level 1(<h1>)이다.
 describe("R1-09 설정 섹션 제목 heading", () => {

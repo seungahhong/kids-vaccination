@@ -51,3 +51,29 @@ describe("U-14 Disclaimer placement", () => {
     });
   });
 });
+
+// 면책 문구 아래 줄: 데이터 출처와 마지막 업데이트 날짜(vaccinations.json의 updatedAt)를 앱 언어로 보여 준다.
+describe("Disclaimer 출처·업데이트 날짜", () => {
+  it("한국어면 disclaimer-source가 질병관리청·대한소아청소년과학회 출처와 '최종 업데이트: 2026년 11월 7일'을 보여 주고 면책 문구는 그대로다", async () => {
+    await renderWithProviders(<Disclaimer />);
+
+    expect(await screen.findByTestId("disclaimer-source")).toHaveTextContent(
+      "출처: 질병관리청 「2026년 국가예방접종 지침」, 대한소아청소년과학회 권장 일정 · 최종 업데이트: 2026년 11월 7일"
+    );
+    expect(screen.getByTestId("disclaimer")).toHaveTextContent(
+      "이 정보는 참고용이며, 정확한 내용은 소아과 의사와 상담하세요."
+    );
+  });
+
+  it("저장 로케일 en이면 날짜가 영어 표기(November 7, 2026)이고 글자색은 textSecondary다", async () => {
+    await seedStorage({ [STORAGE_KEYS.locale]: "en" });
+    await renderWithProviders(<Disclaimer placement="top" />);
+
+    const source = await screen.findByTestId("disclaimer-source");
+    expect(source).toHaveTextContent(/Last updated: November 7, 2026$/);
+    expect(source).toHaveStyle({
+      textAlign: "left",
+      color: lightTokens.textSecondary,
+    });
+  });
+});

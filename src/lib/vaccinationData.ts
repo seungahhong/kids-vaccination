@@ -1,6 +1,8 @@
 import rawData from "@/data/vaccinations.json";
+import { isIsoDate } from "@/lib/date";
 import { LOCALES } from "@/lib/locale";
 import type {
+  IsoDate,
   Vaccination,
   VaccinationCategory,
   VaccinationData,
@@ -158,6 +160,10 @@ export function validateVaccinationData(value: unknown): DataValidation {
     return { ok: false, errors: ["vaccinations는 배열이어야 한다"] };
   }
   const errors: string[] = [];
+  const updatedAt = value.updatedAt;
+  if (typeof updatedAt !== "string" || !isIsoDate(updatedAt)) {
+    errors.push("updatedAt: 'YYYY-MM-DD' 날짜여야 한다");
+  }
   const seenIds = new Set<string>();
   list.forEach((item: unknown, index) =>
     validateVaccination(item, `vaccinations[${index}]`, seenIds, errors)
@@ -171,14 +177,24 @@ export function isVaccinationData(value: unknown): value is VaccinationData {
   return validateVaccinationData(value).ok;
 }
 
-/** 검증을 통과한 백신 목록. 실패하면 throw(개발 중 즉시 발견, 설계서 §6.1) */
-export function loadVaccinations(value: unknown): readonly Vaccination[] {
+/** 검증을 통과한 접종 데이터. 실패하면 throw(개발 중 즉시 발견, 설계서 §6.1) */
+export function loadVaccinationData(value: unknown): VaccinationData {
   const result = validateVaccinationData(value);
   if (!result.ok) {
     throw new Error(`vaccinations.json 검증 실패: ${result.errors.join("; ")}`);
   }
-  return result.data.vaccinations;
+  return result.data;
 }
 
+/** 검증을 통과한 백신 목록. 실패하면 throw */
+export function loadVaccinations(value: unknown): readonly Vaccination[] {
+  return loadVaccinationData(value).vaccinations;
+}
+
+const DATA = loadVaccinationData(rawData);
+
 /** 모듈 로드 시 1회 검증한 접종 데이터(14종 41회차) */
-export const VACCINATIONS: readonly Vaccination[] = loadVaccinations(rawData);
+export const VACCINATIONS: readonly Vaccination[] = DATA.vaccinations;
+
+/** 접종 데이터를 출처와 마지막으로 대조한 날(vaccinations.json의 updatedAt) */
+export const VACCINATIONS_UPDATED_AT: IsoDate = DATA.updatedAt;

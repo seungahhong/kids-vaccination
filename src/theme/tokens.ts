@@ -22,6 +22,7 @@ export const THEME_TOKEN_KEYS = [
   "statusUpcoming",
   "statusSoon",
   "statusPast",
+  "statusCompleted",
   "badgeUpcomingBackground",
   "badgeUpcomingText",
   "badgeSoonBackground",
@@ -32,6 +33,11 @@ export const THEME_TOKEN_KEYS = [
   "badgeNationalText",
   "badgeOptionalBackground",
   "badgeOptionalText",
+  "badgeCompletedBackground",
+  "badgeCompletedText",
+  "checkboxChecked",
+  "onCheckboxChecked",
+  "shadow",
   "danger",
   "onDanger",
   "dangerSurface",
@@ -61,6 +67,7 @@ export const lightTokens = {
   statusUpcoming: "#14b8a6",
   statusSoon: "#f97316",
   statusPast: "#d6d3d1",
+  statusCompleted: "#22c55e",
   badgeUpcomingBackground: "#f0fdfa",
   badgeUpcomingText: "#0f766e",
   badgeSoonBackground: "#fff7ed",
@@ -71,6 +78,11 @@ export const lightTokens = {
   badgeNationalText: "#1d4ed8",
   badgeOptionalBackground: "#f5f3ff",
   badgeOptionalText: "#6d28d9",
+  badgeCompletedBackground: "#f0fdf4",
+  badgeCompletedText: "#166534",
+  checkboxChecked: "#0f766e",
+  onCheckboxChecked: "#ffffff",
+  shadow: "#1c1917",
   danger: "#dc2626",
   onDanger: "#ffffff",
   dangerSurface: "#fef2f2",
@@ -96,6 +108,7 @@ export const darkTokens = {
   statusUpcoming: "#14b8a6",
   statusSoon: "#f97316",
   statusPast: "#57534e",
+  statusCompleted: "#22c55e",
   badgeUpcomingBackground: "#134e4a",
   badgeUpcomingText: "#99f6e4",
   badgeSoonBackground: "#7c2d12",
@@ -106,6 +119,11 @@ export const darkTokens = {
   badgeNationalText: "#bfdbfe",
   badgeOptionalBackground: "#4c1d95",
   badgeOptionalText: "#ddd6fe",
+  badgeCompletedBackground: "#14532d",
+  badgeCompletedText: "#bbf7d0",
+  checkboxChecked: "#2dd4bf",
+  onCheckboxChecked: "#1c1917",
+  shadow: "#000000",
   danger: "#f87171",
   onDanger: "#1c1917",
   dangerSurface: "#450a0a",
@@ -141,6 +159,9 @@ export const CONTRAST_PAIRS: readonly (readonly [
   ["badgePastText", "badgePastBackground"],
   ["badgeNationalText", "badgeNationalBackground"],
   ["badgeOptionalText", "badgeOptionalBackground"],
+  ["badgeCompletedText", "badgeCompletedBackground"],
+  // 완료 체크박스의 체크 표시(비텍스트지만 텍스트와 같은 4.5:1로 묶어 둔다, U-22)
+  ["onCheckboxChecked", "checkboxChecked"],
   ["danger", "background"],
   ["danger", "surface"],
   ["dangerText", "dangerSurface"],
@@ -149,6 +170,12 @@ export const CONTRAST_PAIRS: readonly (readonly [
 
 /** 상호작용 요소 최소 터치 영역(pt), PRD §7.2 G-6 (d) */
 export const MIN_TOUCH_TARGET = 44;
+
+/**
+ * 앱 칼럼 최대 너비(pt·CSS px). iPad 기본 해상도(768×1024)의 세로 너비를 "모바일 최대 너비"로 본다(v1.8 U-31).
+ * 데스크톱 웹·큰 iPad 가로 화면에서는 헤더·본문·하단 탭 바가 이 너비의 가운데 칼럼에 머물고 더 늘어나지 않는다
+ */
+export const MAX_CONTENT_WIDTH = 768;
 
 /** 생년월일 피커·테마/언어 옵션의 최소 높이(pt), 설계서 §5.8 */
 export const MIN_CONTROL_HEIGHT = 48;

@@ -1,3 +1,4 @@
+import { NO_COMPLETIONS, toggleId } from "@/lib/completion";
 import { addDays, addMonthsClamped, compareDay, startOfDay } from "@/lib/date";
 import type {
   Locale,
@@ -5,7 +6,9 @@ import type {
   ScheduleFilter,
   ScheduleGroup,
   ScheduleItem,
+  ScheduleItemId,
   ScheduleSection,
+  ScheduleSectionKind,
   ScheduleStatus,
   Vaccination,
 } from "@/types";
@@ -115,22 +118,81 @@ export function groupScheduleByAge(
 }
 
 /**
- * 화면 목록 구역(AC-6.5, U-13). 'all'은 접종할 구역(soon|upcoming)을 위, 지난 구역(past)을 아래에 둔다.
- * 'upcoming'·'past'는 그 구역 하나다. 구역마다 groupScheduleByAge로 묶으므로 지난 항목과 남은 항목이 섞인
- * 월령 그룹은 두 구역에 나뉜다. 빈 구역은 뺀다(빈 입력 → [])
+ * 항목이 들어갈 화면 구역(U-19·U-20). 지난 항목은 완료 체크와 무관하게 past다(지난 구역 제자리).
+ * 곧 접종·예정 항목은 완료 체크했으면 completed, 아니면 upcoming이다.
+ */
+export function sectionKindOf(
+  item: ScheduleItem,
+  completed: ReadonlySet<ScheduleItemId>
+): ScheduleSectionKind {
+  if (item.status === "past") return "past";
+  return completed.has(item.id) ? "completed" : "upcoming";
+}
+
+/** 필터별 구역 순서(AC-6.5·U-13, AC-19.2·19.3 U-19) */
+const SECTION_ORDER: Readonly<
+  Record<ScheduleFilter, readonly ScheduleSectionKind[]>
+> = {
+  all: ["upcoming", "completed", "past"],
+  upcoming: ["upcoming", "completed"],
+  past: ["past"],
+};
+
+/**
+ * 화면 목록 구역(AC-6.5·U-13, AC-19.2·19.3·U-19). 필터에 드는 항목(filterSchedule)을 구역으로 나눈다.
+ * 'all'은 접종할 구역(완료 전 soon|upcoming) → 완료 구역(완료 체크한 soon|upcoming) → 지난 구역 순이라 완료 항목이
+ * "지난 접종" 바로 위에 온다. 'upcoming'은 접종할 구역 → 완료 구역이라 완료 항목이 맨 아래에 온다. 'past'는 지난 구역 하나다.
+ * 구역마다 groupScheduleByAge로 묶으므로 한 월령 그룹이 여러 구역에 나뉠 수 있다. 빈 구역은 뺀다(빈 입력 → [])
  */
 export function sectionSchedule(
   items: readonly ScheduleItem[],
-  filter: ScheduleFilter
+  filter: ScheduleFilter,
+  completed: ReadonlySet<ScheduleItemId> = NO_COMPLETIONS
 ): ScheduleSection[] {
-  const kinds: readonly ScheduleSection["kind"][] =
-    filter === "all" ? ["upcoming", "past"] : [filter];
-  return kinds
+  const visible = filterSchedule(items, filter);
+  return SECTION_ORDER[filter]
     .map((kind) => ({
       kind,
-      groups: groupScheduleByAge(filterSchedule(items, kind)),
+      groups: groupScheduleByAge(
+        visible.filter((item) => sectionKindOf(item, completed) === kind)
+      ),
     }))
     .filter((section) => section.groups.length > 0);
+}
+
+/** 구역 → 월령 그룹 → 카드의 화면 순서로 펼친 항목 id */
+export function flattenSections(
+  sections: readonly ScheduleSection[]
+): ScheduleItemId[] {
+  return sections.flatMap((section) =>
+    section.groups.flatMap((group) => group.items.map((item) => item.id))
+  );
+}
+
+/**
+ * 완료 체크를 뒤집은 뒤 포커스를 둘 항목(U-22). 항목이 다른 구역으로 옮겨 가면 그 카드는 새로 마운트되어 포커스가 사라지므로,
+ * 토글 전 화면 목록에서 그 항목 바로 다음 항목(마지막이면 바로 앞 항목, 혼자면 그 항목 자신)을 돌려준다.
+ * 할 일 목록처럼 키보드·화면 낭독기 사용자가 제자리에서 이어서 다음 카드를 체크할 수 있다.
+ * 구역이 그대로면(지난 항목) undefined다 — 카드가 제자리에 남아 포커스도 그대로다. 일정에 없거나 필터에 보이지 않는 id도 undefined다
+ */
+export function focusTargetAfterToggle(
+  items: readonly ScheduleItem[],
+  filter: ScheduleFilter,
+  completed: ReadonlySet<ScheduleItemId>,
+  id: ScheduleItemId
+): ScheduleItemId | undefined {
+  const item = items.find((candidate) => candidate.id === id);
+  if (item === undefined) return undefined;
+  if (
+    sectionKindOf(item, completed) ===
+    sectionKindOf(item, toggleId(completed, id))
+  ) {
+    return undefined;
+  }
+  const order = flattenSections(sectionSchedule(items, filter, completed));
+  const index = order.indexOf(id);
+  if (index < 0) return undefined;
+  return order[index + 1] ?? order[index - 1] ?? id;
 }
 
 type MonthsLabels = {

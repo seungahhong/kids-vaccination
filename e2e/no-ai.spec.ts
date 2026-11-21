@@ -5,7 +5,9 @@ import {
   DARK_BG,
   expect,
   expectOnlyLocalRequests,
+  fillBirthdate,
   LIGHT_BG,
+  readChildren,
   readStorage,
   recordRequests,
   test,
@@ -54,7 +56,8 @@ test("AC-17.1 생년월일 2026-04-30으로 홈 → 일정(schedule-card-bcg-1 �
   await seed({ [BIRTHDATE_KEY]: "2026-04-30" });
   await page.goto("/");
   await expect(screenOf("home")).toBeVisible();
-  await expectNoAiAndBottomTabs(page, "일정 확인하기");
+  // 아이가 있으면 홈은 저장된 아이 목록이다(v1.7 U-30)
+  await expectNoAiAndBottomTabs(page, "저장된 아이");
 
   await page.getByRole("tab", { name: "접종 일정", exact: true }).click();
   await expect(page).toHaveURL("/schedule");
@@ -71,7 +74,7 @@ test("AC-17.1 생년월일 2026-04-30으로 홈 → 일정(schedule-card-bcg-1 �
   await page.getByRole("tab", { name: "설정", exact: true }).click();
   await expect(page).toHaveURL("/settings");
   await expect(screenOf("settings")).toBeVisible();
-  await expectNoAiAndBottomTabs(page, "생년월일 삭제");
+  await expectNoAiAndBottomTabs(page, "저장된 아이 1명 (최대 10명)");
 });
 
 test("AC-17.2 page.on('request')로 요청 URL을 기록하며 AC-1.2 → AC-7.2 → AC-9.1 → AC-11.4 → AC-12.1 흐름을 한 컨텍스트에서 연속 수행하면 기록된 모든 요청의 origin이 http://localhost:8081(또는 ws://localhost:8081)이고 외부 호스트 요청은 0건이다", async ({
@@ -85,14 +88,16 @@ test("AC-17.2 page.on('request')로 요청 URL을 기록하며 AC-1.2 → AC-7.2
   await page.goto("/");
   const home = screenOf("home");
   await expect(home).toBeVisible();
-  await home.getByTestId("birthdate-input").fill("2026-04-30");
+  await fillBirthdate(home, "2026-04-30");
   await home.getByTestId("birthdate-submit").click();
   await expect(page).toHaveURL("/schedule");
   const schedule = screenOf("schedule");
-  await expect(schedule.getByTestId("schedule-birthdate")).toHaveText(
-    "생년월일: 2026-04-30"
-  );
-  expect(await readStorage(page, BIRTHDATE_KEY)).toBe("2026-04-30");
+  await expect(
+    schedule.getByRole("radio", { name: "2026-04-30" })
+  ).toHaveAttribute("aria-checked", "true");
+  await expect
+    .poll(() => readChildren(page))
+    .toMatchObject({ children: [{ birthdate: "2026-04-30" }] });
 
   // AC-7.2: '예정' 필터
   await schedule.getByRole("tab", { name: "예정", exact: true }).click();
@@ -111,7 +116,7 @@ test("AC-17.2 page.on('request')로 요청 URL을 기록하며 AC-1.2 → AC-7.2
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(bcg1.getByTestId("card-details")).toBeVisible();
 
-  // AC-11.4: 설정에서 '다크' → '시스템'
+  // AC-11.3·11.4: 설정에서 '다크' → '라이트'(v1.5 U-24: '시스템' 없음)
   await page.getByRole("tab", { name: "설정", exact: true }).click();
   await expect(page).toHaveURL("/settings");
   const settings = screenOf("settings");
@@ -119,9 +124,9 @@ test("AC-17.2 page.on('request')로 요청 URL을 기록하며 AC-1.2 → AC-7.2
   await settings.getByRole("radio", { name: "다크", exact: true }).click();
   await expect.poll(() => bgColor(settings)).toBe(DARK_BG);
   await expect.poll(() => readStorage(page, THEME_KEY)).toBe("dark");
-  await settings.getByRole("radio", { name: "시스템", exact: true }).click();
+  await settings.getByRole("radio", { name: "라이트", exact: true }).click();
   await expect.poll(() => bgColor(settings)).toBe(LIGHT_BG);
-  await expect.poll(() => readStorage(page, THEME_KEY)).toBe("system");
+  await expect.poll(() => readStorage(page, THEME_KEY)).toBe("light");
 
   // AC-12.1: 'English' → 새로고침 뒤에도 영어
   await settings.getByRole("radio", { name: "English", exact: true }).click();

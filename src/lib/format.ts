@@ -65,3 +65,51 @@ export function formatDoseLabel(
 ): string {
   return `${name} ${DOSE_LABELS[locale](doseNumber)}`;
 }
+
+// 연·월·일 선택지 표기(v1.8 U-32). 웹 선택 상자·Android 선택 창이 앱 언어로 보이게 한다(브라우저·기기 날짜 UI는 앱 언어를 따르지 않음).
+
+/** ko `${y}년` · en `${y}` · ja/zh `${y}年` */
+export function formatYearPart(year: number, locale: Locale): string {
+  switch (locale) {
+    case "ko":
+      return `${year}년`;
+    case "en":
+      return String(year);
+    case "ja":
+    case "zh":
+      return `${year}年`;
+  }
+}
+
+/** month 1~12. ko `${m}월` · en 영문 월 이름 · ja/zh `${m}月` */
+export function formatMonthPart(month: number, locale: Locale): string {
+  switch (locale) {
+    case "ko":
+      return `${month}월`;
+    case "en":
+      return MONTHS_EN[toMonthIndex(month)];
+    case "ja":
+    case "zh":
+      return `${month}月`;
+  }
+}
+
+/** ko `${d}일` · en `${d}` · ja/zh `${d}日` */
+export function formatDayPart(day: number, locale: Locale): string {
+  switch (locale) {
+    case "ko":
+      return `${day}일`;
+    case "en":
+      return String(day);
+    case "ja":
+    case "zh":
+      return `${day}日`;
+  }
+}
+
+/** 1~12 → 0~11(범위 밖은 가장 가까운 끝) */
+function toMonthIndex(month: number): MonthIndex {
+  const index = Math.min(11, Math.max(0, Math.round(month) - 1));
+  // 0~11로 잘랐으므로 MonthIndex다
+  return index as MonthIndex;
+}

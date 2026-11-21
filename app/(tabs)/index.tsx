@@ -1,43 +1,32 @@
 import { useRouter } from "expo-router";
-import { ArrowRight, Syringe } from "lucide-react-native";
-import { type ReactElement, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Syringe } from "lucide-react-native";
+import type { ReactElement } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "@/components/common/Screen";
-import { BirthdatePicker } from "@/components/home/BirthdatePicker";
-import { ExistingBirthdateShortcut } from "@/components/home/ExistingBirthdateShortcut";
-import { useBirthdate } from "@/contexts/BirthdateContext";
+import { AddChildForm } from "@/components/home/AddChildForm";
+import { SavedChildren } from "@/components/home/SavedChildren";
+import { useChildren } from "@/contexts/ChildrenContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useToday } from "@/hooks/useToday";
-import {
-  getBirthdateRange,
-  isoDateToDate,
-  isWithinRange,
-  toIsoDate,
-} from "@/lib/date";
 import { FONT_SIZE, RADIUS, SPACING } from "@/theme/tokens";
-import type { DateRange, IsoDate } from "@/types";
+import type { ChildId } from "@/types";
 
-// 홈(FR-01·FR-02, 설계서 §5.9): 제목/부제 → 생년월일 피커(플랫폼별 BirthdatePicker) → 제출.
-// 허용 범위는 useToday() 기준 getBirthdateRange(U-05)이고, 제출은 초안이 범위 안일 때만 활성이다.
-// 저장은 BirthdateContext setter만 쓴다(화면은 AsyncStorage를 직접 만지지 않는다, 설계서 §2.1 규칙 4).
+// 홈(FR-01·FR-02·FR-16, 설계서 §5.9): 제목/부제 → (아이가 없으면) 아이 추가 폼 / (있으면) 저장된 아이 목록.
+// 아이 추가는 처음에만 홈 화면에서 한다(U-30). 한 명이라도 저장되면 홈에서는 폼을 숨기고 저장된 아이 목록(SavedChildren)만 보이며,
+// 더 추가하려면 헤더의 "아이 추가" 버튼(AppHeader)을 쓴다. 폼은 AddChildForm(생년월일 필수 → 이름 선택)이고, 제출하면 그 아이를
+// 선택해 일정 화면으로 간다. 목록의 바로가기도 그 아이를 선택하고 일정 화면으로 간다.
+// 저장은 ChildrenContext 함수만 쓴다(화면은 AsyncStorage를 직접 만지지 않는다, 설계서 §2.1 규칙 4).
 // 본문은 스크롤한다: 짧은 화면(가로 모드·200% 확대)이나 큰 글꼴에서도 제출 버튼까지 닿아야 한다(리뷰 R1-02).
 export default function HomeScreen(): ReactElement {
   const { t } = useI18n();
   const { tokens } = useTheme();
-  const { birthdate, setBirthdate } = useBirthdate();
+  const { children, selectChild } = useChildren();
   const router = useRouter();
-  // 의존성은 Date identity가 아니라 날짜 문자열(설계서 §5.6·§5.9)
-  const todayKey = toIsoDate(useToday());
-  const range = useMemo(
-    () => getBirthdateRange(isoDateToDate(todayKey)),
-    [todayKey]
-  );
 
   const goToSchedule = () => router.navigate("/schedule");
-  const handleSubmit = (next: IsoDate) => {
-    setBirthdate(next);
+  const openChild = (id: ChildId) => {
+    selectChild(id);
     goToSchedule();
   };
 
@@ -56,60 +45,12 @@ export default function HomeScreen(): ReactElement {
           {t("home.subtitle")}
         </Text>
       </View>
-      {birthdate !== null && (
-        <ExistingBirthdateShortcut
-          birthdate={birthdate}
-          onPress={goToSchedule}
-        />
+      {children.length === 0 ? (
+        <AddChildForm testID="home-add-child" onAdded={goToSchedule} />
+      ) : (
+        <SavedChildren items={children} onOpen={openChild} />
       )}
-      {/* 저장값이 바뀌면(설정에서 삭제 등) remount해 초안을 다시 프리필한다(파생 state effect 대신 key) */}
-      <HomeForm
-        key={birthdate ?? "none"}
-        initialValue={birthdate}
-        range={range}
-        onSubmit={handleSubmit}
-      />
     </Screen>
-  );
-}
-
-function HomeForm({
-  initialValue,
-  range,
-  onSubmit,
-}: {
-  /** 저장된 생년월일(프리필, AC-1.5). 없으면 null */
-  readonly initialValue: IsoDate | null;
-  readonly range: DateRange;
-  readonly onSubmit: (next: IsoDate) => void;
-}): ReactElement {
-  const { t } = useI18n();
-  const { tokens } = useTheme();
-  const [draft, setDraft] = useState<IsoDate | null>(initialValue);
-  const canSubmit =
-    draft !== null && isWithinRange(isoDateToDate(draft), range);
-
-  return (
-    <View style={styles.form}>
-      <BirthdatePicker value={draft} onChange={setDraft} range={range} />
-      <Pressable
-        testID="birthdate-submit"
-        role="button"
-        disabled={!canSubmit}
-        onPress={() => {
-          if (canSubmit) onSubmit(draft);
-        }}
-        style={[
-          styles.submit,
-          { backgroundColor: tokens.primary, opacity: canSubmit ? 1 : 0.4 },
-        ]}
-      >
-        <Text style={[styles.submitText, { color: tokens.onPrimary }]}>
-          {t("home.submit")}
-        </Text>
-        <ArrowRight color={tokens.onPrimary} size={18} />
-      </Pressable>
-    </View>
   );
 }
 
@@ -135,15 +76,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: SPACING.md,
   },
-  form: { gap: SPACING.md, marginTop: SPACING.sm },
-  submit: {
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: SPACING.sm,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.lg,
-  },
-  submitText: { fontSize: FONT_SIZE.md, fontWeight: "600" },
 });

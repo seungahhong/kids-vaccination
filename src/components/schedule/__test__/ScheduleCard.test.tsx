@@ -5,11 +5,13 @@ import { ScheduleCard } from "@/components/schedule/ScheduleCard";
 import { generateSchedule } from "@/lib/schedule";
 import { STORAGE_KEYS } from "@/lib/storage";
 import { VACCINATIONS } from "@/lib/vaccinationData";
-import { lightTokens } from "@/theme/tokens";
+import { lightTokens, MIN_TOUCH_TARGET } from "@/theme/tokens";
 import type { ScheduleItem } from "@/types";
 
 import {
   FIXED_NOW,
+  fireLayout,
+  hostWithProps,
   renderWithProviders,
   seedStorage,
 } from "../../../../test-utils/render";
@@ -19,6 +21,9 @@ import {
 // 카드 구조(U-02): 컨테이너 schedule-card-{id}(role 없음) > 헤더 토글 card-toggle(role=button, expanded) + 펼침 시 형제 card-details.
 
 const ITEMS = generateSchedule(new Date(2026, 3, 30), VACCINATIONS, FIXED_NOW);
+
+/** 완료 체크 전 카드 props(FR-14). 완료 체크박스를 보지 않는 테스트가 쓴다 */
+const UNCHECKED = { completed: false, onToggleCompleted: () => {} } as const;
 
 function itemOf(id: string): ScheduleItem {
   const item = ITEMS.find((candidate) => candidate.id === id);
@@ -31,7 +36,7 @@ async function renderCards(ids: readonly string[]): Promise<void> {
   await renderWithProviders(
     <View>
       {ids.map((id) => (
-        <ScheduleCard key={id} item={itemOf(id)} />
+        <ScheduleCard key={id} item={itemOf(id)} {...UNCHECKED} />
       ))}
     </View>
   );
@@ -216,8 +221,8 @@ describe("U-15 [unit] 분류 배지", () => {
   it("U-15 [unit] 라이트 테마에서 national 카드(bcg-1)는 '필수'(badgeNational 색), optional 카드는 '선택'(badgeOptional 색)이고 둘 다 토글 버튼 안에 있다", async () => {
     await renderWithProviders(
       <View>
-        <ScheduleCard item={itemOf("bcg-1")} />
-        <ScheduleCard item={optionalItem()} />
+        <ScheduleCard item={itemOf("bcg-1")} {...UNCHECKED} />
+        <ScheduleCard item={optionalItem()} {...UNCHECKED} />
       </View>
     );
     await screen.findByTestId("schedule-card-bcg-1");
@@ -250,8 +255,8 @@ describe("U-15 [unit] 분류 배지", () => {
     await seedStorage({ [STORAGE_KEYS.locale]: "en" });
     await renderWithProviders(
       <View>
-        <ScheduleCard item={itemOf("bcg-1")} />
-        <ScheduleCard item={optionalItem()} />
+        <ScheduleCard item={itemOf("bcg-1")} {...UNCHECKED} />
+        <ScheduleCard item={optionalItem()} {...UNCHECKED} />
       </View>
     );
     await screen.findByTestId("schedule-card-bcg-1");
@@ -283,5 +288,154 @@ describe("U-15 [unit] 실제 데이터 분류 배지", () => {
       "RSV 항체주사(니르세비맙) 1차",
       "RSV(호흡기세포융합바이러스) 감염",
     ]);
+  });
+});
+
+// FR-14 완료 체크박스(U-19·U-22). 체크박스는 토글 버튼 밖(왼쪽)의 role="checkbox"이고, 이름은 "{이름+회차}: 접종 완료"다.
+// 완료 카드는 상태 배지·점이 "완료"(badgeCompleted*·statusCompleted)이고 배경이 옅다(surfaceMuted). 구역 이동은 화면 테스트가 본다.
+describe("AC-19.1 [unit] 완료 체크박스", () => {
+  it("AC-19.1 [unit] 카드마다 체크박스가 1개(role checkbox, checked=false, 이름 'B형간염 3차: 접종 완료')이고 토글 버튼 밖에 있으며, 누르면 onToggleCompleted('hepb-3')이 1번 불린다", async () => {
+    const onToggleCompleted = jest.fn();
+    await renderWithProviders(
+      <ScheduleCard
+        item={itemOf("hepb-3")}
+        completed={false}
+        onToggleCompleted={onToggleCompleted}
+      />
+    );
+    await screen.findByTestId("schedule-card-hepb-3");
+    const card = cardScope("hepb-3");
+
+    const checkbox = card.getByRole("checkbox", {
+      name: "B형간염 3차: 접종 완료",
+      checked: false,
+    });
+    expect(checkbox).toBe(card.getByTestId("complete-checkbox"));
+    expect(card.getAllByRole("checkbox")).toHaveLength(1);
+    expect(
+      within(card.getByTestId("card-toggle")).queryByTestId("complete-checkbox")
+    ).toBeNull();
+    expect(checkbox).toHaveStyle({
+      width: MIN_TOUCH_TARGET,
+      height: MIN_TOUCH_TARGET,
+    });
+
+    await fireEvent.press(checkbox);
+
+    expect(onToggleCompleted).toHaveBeenCalledTimes(1);
+    expect(onToggleCompleted).toHaveBeenCalledWith("hepb-3");
+  });
+
+  it("AC-19.1 [unit] completed면 체크박스 checked=true(상자 checkboxChecked), 상태 배지·점이 '완료'(badgeCompleted·statusCompleted), 카드 배경이 surfaceMuted이고 토글 이름에 '완료'가 들어간다", async () => {
+    await renderWithProviders(
+      <ScheduleCard
+        item={itemOf("hepb-3")}
+        completed
+        onToggleCompleted={() => {}}
+      />
+    );
+    await screen.findByTestId("schedule-card-hepb-3");
+    const card = cardScope("hepb-3");
+
+    expect(
+      card.getByRole("checkbox", { name: "B형간염 3차: 접종 완료" })
+    ).toBeChecked();
+    expect(card.getByTestId("complete-checkbox-box")).toHaveStyle({
+      backgroundColor: lightTokens.checkboxChecked,
+    });
+    const badge = card.getByTestId("status-badge");
+    expect(badge).toHaveTextContent("완료");
+    expect(badge).toHaveStyle({
+      backgroundColor: lightTokens.badgeCompletedBackground,
+    });
+    expect(within(badge).getByText("완료")).toHaveStyle({
+      color: lightTokens.badgeCompletedText,
+    });
+    expect(card.getByTestId("status-dot")).toHaveStyle({
+      backgroundColor: lightTokens.statusCompleted,
+    });
+    expect(screen.getByTestId("schedule-card-hepb-3")).toHaveStyle({
+      backgroundColor: lightTokens.surfaceMuted,
+    });
+    expect(card.getByText("B형간염 3차")).toHaveStyle({
+      color: lightTokens.textPast,
+    });
+    expect(
+      card.getByRole("button", {
+        name: /^B형간염 3차 완료 필수 B형간염 2026년 10월 30일/,
+      })
+    ).toBe(card.getByTestId("card-toggle"));
+    expect(card.queryByText("곧 접종")).toBeNull();
+  });
+
+  it("AC-19.1 [unit] 체크 전 체크박스 상자는 채움 없이 테두리만 있고, 테두리는 카드 보조 글자색(일반 카드 textSecondary, 지난 카드 textPast)이다", async () => {
+    await renderCards(["hepb-3", "bcg-1"]);
+
+    expect(
+      cardScope("hepb-3").getByTestId("complete-checkbox-box")
+    ).toHaveStyle({ borderColor: lightTokens.textSecondary });
+    expect(cardScope("bcg-1").getByTestId("complete-checkbox-box")).toHaveStyle(
+      { borderColor: lightTokens.textPast }
+    );
+    expect(
+      cardScope("hepb-3").getByTestId("complete-checkbox-box")
+    ).not.toHaveStyle({ backgroundColor: lightTokens.checkboxChecked });
+  });
+
+  it("AC-19.10 [unit] 저장값 locale 'en'이면 체크박스 이름이 'Hepatitis B Dose 3: Vaccinated'이고 완료 배지는 'Done'이다", async () => {
+    await seedStorage({ [STORAGE_KEYS.locale]: "en" });
+    await renderWithProviders(
+      <ScheduleCard
+        item={itemOf("hepb-3")}
+        completed
+        onToggleCompleted={() => {}}
+      />
+    );
+    await screen.findByTestId("schedule-card-hepb-3");
+    const card = cardScope("hepb-3");
+
+    expect(
+      card.getByRole("checkbox", { name: "Hepatitis B Dose 3: Vaccinated" })
+    ).toBeChecked();
+    expect(card.getByTestId("status-badge")).toHaveTextContent("Done");
+  });
+});
+
+// U-22: 화면이 토글 뒤 포커스를 옮길 수 있게 카드는 체크박스 호스트를 등록하고(마운트·해제), 네이티브 배치 시점을 알린다.
+describe("U-22 [unit] 체크박스 등록·배치 알림", () => {
+  it("U-22 [unit] 마운트하면 registerCheckbox(id, 체크박스 호스트), 언마운트하면 registerCheckbox(id, null)이고 체크박스 onLayout은 onCheckboxLayout(id)를 부른다", async () => {
+    const registerCheckbox = jest.fn();
+    const onCheckboxLayout = jest.fn();
+    const { unmount } = await renderWithProviders(
+      <ScheduleCard
+        item={itemOf("hepb-3")}
+        completed={false}
+        onToggleCompleted={() => {}}
+        registerCheckbox={registerCheckbox}
+        onCheckboxLayout={onCheckboxLayout}
+      />
+    );
+    const checkbox = await screen.findByTestId("complete-checkbox");
+
+    expect(registerCheckbox).toHaveBeenLastCalledWith(
+      "hepb-3",
+      hostWithProps({ testID: "complete-checkbox" })
+    );
+
+    await fireLayout(checkbox);
+    expect(onCheckboxLayout).toHaveBeenCalledWith("hepb-3");
+
+    await unmount();
+    expect(registerCheckbox).toHaveBeenLastCalledWith("hepb-3", null);
+  });
+
+  it("U-22 [unit] registerCheckbox·onCheckboxLayout 없이도 렌더되고 배치 알림을 무시한다", async () => {
+    await renderCards(["hepb-3"]);
+
+    await fireLayout(cardScope("hepb-3").getByTestId("complete-checkbox"));
+
+    expect(
+      cardScope("hepb-3").getByTestId("complete-checkbox")
+    ).toBeOnTheScreen();
   });
 });

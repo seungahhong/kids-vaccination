@@ -168,9 +168,9 @@ describe("G-6 (a) WCAG 대비 계산(src/theme/contrast.ts)", () => {
 // G-7 (NFR-06): light/dark 토큰 키 집합이 같고, primary 계열 #14b8a6, accent 계열 #f97316, stone 배경 #fafaf9/#1c1917가 포함된다.
 // 값은 설계서 §4.5 토큰 표(PRD §3.4 요약)를 그대로 따른다 — E2E의 rgb 기대값(AC-11.x, AC-15.2)이 이 값에서 나온다.
 describe("G-7 테마 토큰 키 동일성", () => {
-  it("G-7 THEME_TOKEN_KEYS는 설계서 §4.5의 28개 키 + 분류 배지 4개(U-15) = 32개이고 중복이 없다", () => {
-    expect(THEME_TOKEN_KEYS).toHaveLength(32);
-    expect(new Set(THEME_TOKEN_KEYS).size).toBe(32);
+  it("G-7 THEME_TOKEN_KEYS는 설계서 §4.5의 28개 키 + 분류 배지 4개(U-15) + 완료 표시 5개(U-22: 상태 점·배지 2·체크박스 2) + 헤더 메뉴 그림자 1개(U-25) = 38개이고 중복이 없다", () => {
+    expect(THEME_TOKEN_KEYS).toHaveLength(38);
+    expect(new Set(THEME_TOKEN_KEYS).size).toBe(38);
   });
 
   it("G-7 lightTokens와 darkTokens의 키 집합은 THEME_TOKEN_KEYS와 같다", () => {

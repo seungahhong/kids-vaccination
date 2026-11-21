@@ -2,8 +2,10 @@ import type { Locator, Page } from "@playwright/test";
 
 import {
   bgColor,
+  birthdateParts,
   DARK_BG,
   expect,
+  fillBirthdate,
   LIGHT_BG,
   type SeedValues,
   test,
@@ -13,12 +15,13 @@ import {
 // 제목은 "G-6 …"로 시작해 PRD §7.3 AC 집계(^AC-n.m)에서 빠진다.
 // (d) 터치 영역: G-6 표에서 웹 role 열이 "—"가 아닌 상호작용 요소의 boundingBox가 모두 44×44 이상이다(뷰포트 390×844).
 //     네이티브 전용 행(birthdate-picker-button, iOS 모달 확인·취소)은 웹에 없으므로 제외한다.
-// (b) 렌더 대비: 홈(birthdate-input에 2024-01-31 입력 포함)·일정(bcg-1 펼침, 지남 카드 포함)·설정 × 라이트·다크에서
+// (b) 렌더 대비: 홈(birthdate-input 연·월·일 선택 상자에 2024-01-31 선택 포함)·일정(bcg-1 펼침, 지남 카드 포함)·설정 × 라이트·다크에서
 //     직접 텍스트 노드를 가진 모든 요소와 모든 input 요소의 computed color와, 자신 또는 가장 가까운 조상의 불투명
 //     backgroundColor 사이의 WCAG 대비가 4.5 이상이다. aria-disabled="true" 하위는 제외한다(WCAG 1.4.3 비활성 예외).
 //     범위는 활성 화면 컨테이너(screen-*)와 하단 탭 바다. 떠난 화면은 aria-hidden 상태로 DOM에 남으므로 범위로 한정한다(AD-08).
 
 const BIRTHDATE_KEY = "vaccination-app-birthdate";
+const THEME_KEY = "vaccination-app-theme";
 const MIN_TARGET_PX = 44;
 const MIN_CONTRAST = 4.5;
 const SCREEN_BACKGROUND = { light: LIGHT_BG, dark: DARK_BG } as const;
@@ -80,7 +83,7 @@ function expectTouchTargets(sizes: readonly TargetSize[]): void {
   expect(tooSmall, `${MIN_TARGET_PX}×${MIN_TARGET_PX}px 미만 요소`).toEqual([]);
 }
 
-test("G-6 (d) 홈: 하단 탭 3개·birthdate-input·birthdate-submit·existing-birthdate-shortcut의 boundingBox가 모두 44×44 이상이다", async ({
+test("G-6 (d) 홈: 하단 탭 3개·저장된 아이 바로가기·헤더의 아이 추가·테마 스위치·언어 버튼, 펼친 아이 추가 메뉴의 연·월·일 선택 상자 3개·child-name-input·birthdate-submit, 펼친 언어 항목 4개의 boundingBox가 모두 44×44 이상이다", async ({
   page,
   seed,
   screenOf,
@@ -93,24 +96,61 @@ test("G-6 (d) 홈: 하단 탭 3개·birthdate-input·birthdate-submit·existing-
   expectTouchTargets([
     ...(await measureTargets("하단 탭", bottomTabs(page), 3)),
     ...(await measureTargets(
-      "birthdate-input",
-      home.getByTestId("birthdate-input"),
+      "child-shortcut",
+      home.getByTestId("child-shortcut"),
+      1
+    )),
+    ...(await measureTargets(
+      "header-add-child-button",
+      home.getByTestId("header-add-child-button"),
+      1
+    )),
+    ...(await measureTargets(
+      "header-theme-toggle",
+      home.getByTestId("header-theme-toggle"),
+      1
+    )),
+    ...(await measureTargets(
+      "header-language-button",
+      home.getByTestId("header-language-button"),
+      1
+    )),
+  ]);
+  // FR-16 U-30: 헤더 아이 추가 메뉴(아이가 있을 때의 추가 폼)
+  await home.getByTestId("header-add-child-button").click();
+  const panel = home.getByTestId("header-add-panel");
+  await fillBirthdate(panel, "2024-01-31");
+  expectTouchTargets([
+    // v1.8 U-32: 웹 피커는 연·월·일 <select> 3개다
+    ...(await measureTargets(
+      "birthdate-select",
+      panel.getByTestId("birthdate-input").getByRole("combobox"),
+      3
+    )),
+    ...(await measureTargets(
+      "child-name-input",
+      panel.getByTestId("child-name-input"),
       1
     )),
     ...(await measureTargets(
       "birthdate-submit",
-      home.getByTestId("birthdate-submit"),
-      1
-    )),
-    ...(await measureTargets(
-      "existing-birthdate-shortcut",
-      home.getByTestId("existing-birthdate-shortcut"),
+      panel.getByTestId("birthdate-submit"),
       1
     )),
   ]);
+  await home.getByTestId("header-add-child-button").click();
+  // FR-15: 헤더 언어 목록을 펼친 상태의 항목
+  await home.getByTestId("header-language-button").click();
+  expectTouchTargets(
+    await measureTargets(
+      "header-locale-option",
+      home.getByTestId(/^header-locale-option-/),
+      4
+    )
+  );
 });
 
-test("G-6 (d) 일정: 필터 3개(filter-all·upcoming·past)와 card-toggle 41개의 boundingBox가 모두 44×44 이상이다", async ({
+test("G-6 (d) 일정: 필터 3개(filter-all·upcoming·past)와 card-toggle 41개·완료 체크박스 complete-checkbox 41개의 boundingBox가 모두 44×44 이상이다", async ({
   page,
   seed,
   screenOf,
@@ -131,6 +171,11 @@ test("G-6 (d) 일정: 필터 3개(filter-all·upcoming·past)와 card-toggle 41�
       schedule.getByTestId("card-toggle"),
       41
     )),
+    ...(await measureTargets(
+      "complete-checkbox",
+      schedule.getByTestId("complete-checkbox"),
+      41
+    )),
   ]);
 });
 
@@ -147,7 +192,7 @@ test("G-6 (d) 일정 빈 상태: go-home 버튼의 boundingBox가 44×44 이상�
   );
 });
 
-test("G-6 (d) 설정: theme-option 3개·locale-option 4개·reset-button, 확인 단계의 reset-confirm·reset-cancel boundingBox가 모두 44×44 이상이다", async ({
+test("G-6 (d) 설정: theme-option 2개·locale-option 4개·아이 삭제 버튼(child-delete), 확인 단계의 child-delete-confirm·child-delete-cancel boundingBox가 모두 44×44 이상이다", async ({
   page,
   seed,
   screenOf,
@@ -161,7 +206,7 @@ test("G-6 (d) 설정: theme-option 3개·locale-option 4개·reset-button, 확�
     ...(await measureTargets(
       "theme-option",
       settings.getByTestId(/^theme-option-/),
-      3
+      2
     )),
     ...(await measureTargets(
       "locale-option",
@@ -169,21 +214,21 @@ test("G-6 (d) 설정: theme-option 3개·locale-option 4개·reset-button, 확�
       4
     )),
     ...(await measureTargets(
-      "reset-button",
-      settings.getByTestId("reset-button"),
+      "child-delete",
+      settings.getByTestId("child-delete"),
       1
     )),
   ];
-  await settings.getByTestId("reset-button").click();
+  await settings.getByTestId("child-delete").click();
   sizes.push(
     ...(await measureTargets(
-      "reset-confirm",
-      settings.getByTestId("reset-confirm"),
+      "child-delete-confirm",
+      settings.getByTestId("child-delete-confirm"),
       1
     )),
     ...(await measureTargets(
-      "reset-cancel",
-      settings.getByTestId("reset-cancel"),
+      "child-delete-cancel",
+      settings.getByTestId("child-delete-cancel"),
       1
     ))
   );
@@ -345,7 +390,7 @@ function expectContrast(
   }
 }
 
-/** OS 색 모드를 emulateMedia로 바꾸고(선호 system), 저장값 생년월일 2026-04-30으로 path에 진입한다 */
+/** 저장값 테마 scheme·생년월일 2026-04-30으로 path에 진입한다(v1.5 U-24: 앱은 OS 색 모드를 따르지 않으므로 저장값으로 고른다) */
 async function openInScheme(
   page: Page,
   seed: (values: SeedValues) => Promise<void>,
@@ -353,8 +398,7 @@ async function openInScheme(
   path: string,
   screen: Locator
 ): Promise<void> {
-  await page.emulateMedia({ colorScheme: scheme });
-  await seed({ [BIRTHDATE_KEY]: "2026-04-30" });
+  await seed({ [BIRTHDATE_KEY]: "2026-04-30", [THEME_KEY]: scheme });
   await page.goto(path);
   await expect(screen).toBeVisible();
   // 스캔 전에 해당 테마가 실제로 적용됐는지 확인한다
@@ -362,34 +406,43 @@ async function openInScheme(
 }
 
 for (const scheme of SCHEMES) {
-  test(`G-6 (b) ${scheme} 홈: 생년월일 프리필 상태와 birthdate-input에 2024-01-31을 넣은 상태에서 텍스트·input 요소의 대비가 모두 4.5:1 이상이다`, async ({
+  test(`G-6 (b) ${scheme} 홈: 저장된 아이 목록 상태와 헤더 아이 추가 메뉴에 2024-01-31·이름을 넣은 상태에서 텍스트·input 요소의 대비가 모두 4.5:1 이상이다`, async ({
     page,
     seed,
     screenOf,
   }) => {
     const home = screenOf("home");
     await openInScheme(page, seed, scheme, "/", home);
-    const prefilled = await scanScreen(page, home);
+    const listed = await scanScreen(page, home);
 
-    const input = home.getByTestId("birthdate-input");
-    await input.fill("2024-01-31");
-    await expect(input).toHaveValue("2024-01-31");
+    await home.getByTestId("header-add-child-button").click();
+    const panel = home.getByTestId("header-add-panel");
+    await fillBirthdate(panel, "2024-01-31");
+    expect(await birthdateParts(panel)).toEqual(["2024", "1", "31"]);
+    await panel.getByTestId("child-name-input").fill("민준");
     const filled = await scanScreen(page, home);
 
     expectContrast(
       `${scheme} 홈`,
-      [...prefilled, ...filled],
+      [...listed, ...filled],
       [
         "아기 예방접종",
-        "이전에 입력한 생년월일이 있어요 (2026-04-30)",
-        '<input value="2024-01-31">',
+        "저장된 아이",
+        "2026-04-30",
+        "일정 바로 보기",
+        "아이 추가",
+        // v1.8 U-32: 연·월·일 선택 상자
+        '<select value="2024">',
+        '<select value="1">',
+        '<select value="31">',
+        '<input value="민준">',
         "일정 확인하기",
         "접종 일정",
       ]
     );
   });
 
-  test(`G-6 (b) ${scheme} 일정: schedule-card-bcg-1(지남)을 펼친 상태에서 텍스트 요소의 대비가 모두 4.5:1 이상이다`, async ({
+  test(`G-6 (b) ${scheme} 일정: schedule-card-bcg-1(지남)을 펼치고 hepb-3을 완료 체크한 상태(완료 구역·완료 배지)에서 텍스트 요소의 대비가 모두 4.5:1 이상이다`, async ({
     page,
     seed,
     screenOf,
@@ -399,21 +452,32 @@ for (const scheme of SCHEMES) {
     const bcg1 = schedule.getByTestId("schedule-card-bcg-1");
     await bcg1.getByTestId("card-toggle").click();
     await expect(bcg1.getByTestId("card-details")).toBeVisible();
+    // FR-14: 완료 카드(옅은 배경 + 완료 배지)와 "접종 완료" 구역 제목도 스캔 대상에 넣는다
+    const hepb3Checkbox = schedule
+      .getByTestId("schedule-card-hepb-3")
+      .getByTestId("complete-checkbox");
+    await hepb3Checkbox.click();
+    await expect(hepb3Checkbox).toHaveAttribute("aria-checked", "true");
+    await expect(
+      schedule.getByTestId("schedule-completed-section")
+    ).toBeVisible();
 
     expectContrast(`${scheme} 일정`, await scanScreen(page, schedule), [
       "예방접종 일정",
-      "생년월일: 2026-04-30",
+      "2026-04-30",
       "출생 시",
       "BCG(피내용) 1차",
       "상세 정보",
       "결핵을 예방하는 백신으로",
       "곧 접종",
+      "완료",
+      "접종 완료",
       "이 정보는 참고용이며",
       "접종 일정",
     ]);
   });
 
-  test(`G-6 (b) ${scheme} 설정: 기본 상태와 삭제 확인 단계에서 텍스트 요소의 대비가 모두 4.5:1 이상이다`, async ({
+  test(`G-6 (b) ${scheme} 설정: 기본 상태·삭제 확인 단계·헤더 언어 목록을 펼친 상태에서 텍스트 요소(헤더 앱 이름 포함)의 대비가 모두 4.5:1 이상이다`, async ({
     page,
     seed,
     screenOf,
@@ -422,19 +486,25 @@ for (const scheme of SCHEMES) {
     await openInScheme(page, seed, scheme, "/settings", settings);
     const idle = await scanScreen(page, settings);
 
-    await settings.getByTestId("reset-button").click();
-    await expect(settings.getByTestId("reset-confirm")).toBeVisible();
+    await settings.getByTestId("child-delete").click();
+    await expect(settings.getByTestId("child-delete-confirm")).toBeVisible();
     const confirming = await scanScreen(page, settings);
+    // FR-15: 헤더 언어 목록(펼친 상태)
+    await settings.getByTestId("header-language-button").click();
+    await expect(settings.getByTestId("header-language-panel")).toBeVisible();
+    const languagePanel = await scanScreen(page, settings);
 
     expectContrast(
       `${scheme} 설정`,
-      [...idle, ...confirming],
+      [...idle, ...confirming, ...languagePanel],
       [
-        "시스템",
+        "아기 예방접종 일정",
+        "라이트",
         "English",
-        "생년월일: 2026-04-30",
-        "생년월일 삭제",
-        "아기 생년월일 정보를 삭제할까요?",
+        "저장된 아이 1명 (최대 10명)",
+        "2026-04-30",
+        "삭제",
+        "2026-04-30 정보를 삭제할까요?",
         "확인",
         "취소",
         "이 정보는 참고용이며",

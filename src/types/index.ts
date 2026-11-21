@@ -39,6 +39,8 @@ export type Vaccination = {
 };
 
 export type VaccinationData = {
+  /** 데이터를 출처(질병관리청 지침·학회 권고)와 마지막으로 대조한 날. 면책 문구 옆에 표시한다 */
+  readonly updatedAt: IsoDate;
   readonly vaccinations: readonly Vaccination[];
 };
 
@@ -71,11 +73,36 @@ export type ScheduleGroup = {
   readonly items: readonly ScheduleItem[];
 };
 
-/** 일정 목록 구역. upcoming = 접종할 항목(soon|upcoming), past = 지난 항목 */
+declare const childIdBrand: unique symbol;
+/** 아이 id. isChildId·createChildId(src/lib/children.ts)로만 만든다(FR-16) */
+export type ChildId = string & { readonly [childIdBrand]: true };
+
+/** 저장된 아이 한 명(FR-16, U-26). 이름은 선택이고, 없으면 화면에 생년월일을 보인다 */
+export type Child = {
+  readonly id: ChildId;
+  readonly name?: string;
+  readonly birthdate: IsoDate;
+  /** 접종 완료 체크한 일정 항목(FR-14). 아이마다 따로다 */
+  readonly completed: readonly ScheduleItemId[];
+};
+
+/** 저장된 아이 목록과 지금 일정을 보여 주는 아이 */
+export type ChildrenState = {
+  readonly activeId: ChildId | null;
+  readonly children: readonly Child[];
+};
+
+/**
+ * 일정 목록 구역. upcoming = 접종할 항목(soon|upcoming, 완료 체크 전), completed = 완료 체크한 soon|upcoming 항목(U-19),
+ * past = 지난 항목(완료 체크와 무관하게 제자리, U-20)
+ */
+export type ScheduleSectionKind = "upcoming" | "completed" | "past";
+
 export type ScheduleSection = {
-  readonly kind: Exclude<ScheduleFilter, "all">;
+  readonly kind: ScheduleSectionKind;
   readonly groups: readonly ScheduleGroup[];
 };
 
-export type ThemePreference = "system" | "light" | "dark";
+/** 사용자가 고른 테마. 라이트·다크 2개다(v1.5 U-24: "시스템"을 없애고 라이트로 합쳤다. OS 색 모드는 따르지 않는다) */
+export type ThemePreference = "light" | "dark";
 export type ColorScheme = "light" | "dark";

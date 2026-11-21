@@ -6,18 +6,48 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { BirthdatePicker } from "@/components/home/BirthdatePicker";
 import { BirthdatePicker as WebBirthdatePicker } from "@/components/home/BirthdatePicker.web";
 import { getBirthdateRange, toIsoDate } from "@/lib/date";
+import { STORAGE_KEYS } from "@/lib/storage";
 import type { IsoDate } from "@/types";
 
 import {
   day,
   FIXED_NOW,
+  type HostElement,
+  propsOf,
   renderWithProviders,
+  seedStorage,
 } from "../../../../test-utils/render";
 
-// FR-01 US-2 네이티브 피커 컴포넌트 수준: AC-2.1(iOS Modal + spinner), AC-2.5(Android onDismiss).
+// FR-01 US-2 네이티브 피커 컴포넌트 수준: AC-2.1(iOS Modal + spinner), AC-2.5(Android 연·월·일 시트 + 취소, v1.8 U-32).
 // Platform.OS는 컴포넌트가 렌더 시점에 읽으므로 jest.replaceProperty로 분기를 바꾼다(AD-05, 설계서 §7.1).
 // jest.setup.ts의 restoreAllMocks가 테스트마다 되돌린다. DateTimePicker는 src/mocks/의 수동 mock(jest.setup.ts가 연결, U-09)이 props를
 // host View(testID datetimepicker-mock)에 노출하고 fireEvent(el, 'valueChange' | 'dismiss')로 조작한다(설계서 §9.3).
+
+/** 항목(radio)의 보이는 텍스트 */
+function describeLabel(node: HostElement): string {
+  return node.children
+    .map((child) => (typeof child === "string" ? child : describeLabel(child)))
+    .join("");
+}
+
+/** 연·월·일 열(radiogroup)의 이름. RNTL은 접근성 요소가 아닌 radiogroup 컨테이너를 role로 찾지 않으므로 testID로 찾는다 */
+function columnLabels(scope: ReturnType<typeof within>): unknown[] {
+  return ["year", "month", "day"].map((part) => {
+    const column = scope.getByTestId(`birthdate-column-${part}`);
+    expect(propsOf(column).role).toBe("radiogroup");
+    return propsOf(column)["aria-label"];
+  });
+}
+
+/** 연·월·일 열에서 checked인 항목의 텍스트가 차례로 expected다 */
+function expectChecked(
+  scope: ReturnType<typeof within>,
+  expected: readonly string[]
+): void {
+  expect(
+    scope.getAllByRole("radio", { checked: true }).map(describeLabel)
+  ).toEqual(expected);
+}
 
 /** ENV-TDD now = 2026-10-18 15:00 → 2017-01-01 ~ 2026-10-18(AC-1.6, U-05) */
 const RANGE = getBirthdateRange(FIXED_NOW);
@@ -59,11 +89,13 @@ describe("AC-2.1 iOS 선택 버튼 → Modal 안의 spinner DateTimePicker", () 
   });
 });
 
-describe("AC-2.5 Android 기존 선택값 + onDismiss", () => {
-  it("AC-2.5 Android·기존 선택값 2024-01-31: 선택 버튼을 눌러 피커(display=default)를 연 뒤 onDismiss()를 호출하면 DateTimePicker가 언마운트되고 선택 버튼 텍스트는 '2024-01-31'로 유지된다(onChange 호출 없음)", async () => {
+// v1.8 U-32: Android는 시스템 날짜 대화상자(기기 언어로만 표시) 대신 iOS와 같은 아래 시트 안에 앱이 그리는 연·월·일 세 열이다.
+// 열마다 radiogroup("연도 선택"·"월 선택"·"일 선택") 안의 radio 항목(birthdate-option-{part}-{값}, 앱 언어 표기)이다.
+describe("AC-2.5 Android 기존 선택값 + 취소", () => {
+  it("AC-2.5 Android·기존 선택값 2024-01-31: 선택 버튼을 누르면 시트(birthdate-picker-modal)에 연·월·일 radiogroup 3개가 열리고 2024년·1월·31일이 checked다. 2025년·2월을 고르면 날은 28일로 맞춰지고(29일 이후 없음), '취소'를 누르면 시트가 닫히며 선택 버튼 텍스트는 '2024-01-31'로 유지되고(onChange 호출 없음) 다시 열면 초안이 2024-01-31로 돌아간다", async () => {
     jest.replaceProperty(Platform, "OS", "android");
     const onChange = jest.fn();
-    const value = toIsoDate(new Date(2024, 0, 31));
+    const value = toIsoDate(day("2024-01-31"));
     await renderWithProviders(
       <BirthdatePicker value={value} onChange={onChange} range={RANGE} />
     );
@@ -72,26 +104,99 @@ describe("AC-2.5 Android 기존 선택값 + onDismiss", () => {
       name: "생년월일, 2024-01-31",
     });
     expect(button).toHaveTextContent("2024-01-31");
-    expect(screen.queryByTestId("datetimepicker-mock")).toBeNull();
+    expect(screen.queryByTestId("birthdate-picker-modal")).toBeNull();
 
     await fireEvent.press(button);
 
-    const picker = screen.getByTestId("datetimepicker-mock");
-    expect(picker).toHaveProp("display", "default");
-    expect(toIsoDate(picker.props.value)).toBe("2024-01-31");
-    // Android는 기본 다이얼로그라 iOS 모달이 없다
+    const modal = within(screen.getByTestId("birthdate-picker-modal"));
+    // 시스템 대화상자(DateTimePicker)는 쓰지 않는다
+    expect(modal.queryByTestId("datetimepicker-mock")).toBeNull();
+    expect(columnLabels(modal)).toEqual(["연도 선택", "월 선택", "일 선택"]);
+    expectChecked(modal, ["2024년", "1월", "31일"]);
+
+    await fireEvent.press(modal.getByRole("radio", { name: "2025년" }));
+    await fireEvent.press(modal.getByRole("radio", { name: "2월" }));
+
+    expectChecked(modal, ["2025년", "2월", "28일"]);
+    expect(modal.queryByTestId("birthdate-option-day-29")).toBeNull();
+
+    await fireEvent.press(modal.getByRole("button", { name: "취소" }));
+
     expect(screen.queryByTestId("birthdate-picker-modal")).toBeNull();
-
-    await fireEvent(picker, "dismiss");
-
-    expect(screen.queryByTestId("datetimepicker-mock")).toBeNull();
     expect(screen.getByTestId("birthdate-picker-button")).toHaveTextContent(
       "2024-01-31"
     );
-    expect(
-      screen.getByRole("button", { name: "생년월일, 2024-01-31" })
-    ).toBeOnTheScreen();
     expect(onChange).not.toHaveBeenCalled();
+
+    await fireEvent.press(button);
+    expectChecked(within(screen.getByTestId("birthdate-picker-modal")), [
+      "2024년",
+      "1월",
+      "31일",
+    ]);
+  });
+
+  it("U-32 Android 선택지는 허용 범위 안만 있다: 연도는 2026년~2017년 10개(최근 연도가 먼저), 선택값 없이 열면 초안은 오늘 2026-10-18이라 월은 10월까지·일은 18일까지이고, 2024년을 고르면 12월까지 생긴다. '확인'을 누르면 초안 날짜를 onChange로 올린다", async () => {
+    jest.replaceProperty(Platform, "OS", "android");
+    const onChange = jest.fn();
+    await renderWithProviders(
+      <BirthdatePicker value={null} onChange={onChange} range={RANGE} />
+    );
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: "생년월일, 생년월일 선택" })
+    );
+    const modal = within(screen.getByTestId("birthdate-picker-modal"));
+    const years = within(modal.getByTestId("birthdate-column-year"));
+    expect(years.getAllByRole("radio").map(describeLabel)).toEqual([
+      "2026년",
+      "2025년",
+      "2024년",
+      "2023년",
+      "2022년",
+      "2021년",
+      "2020년",
+      "2019년",
+      "2018년",
+      "2017년",
+    ]);
+    expectChecked(modal, ["2026년", "10월", "18일"]);
+    expect(modal.queryByTestId("birthdate-option-month-11")).toBeNull();
+    expect(modal.queryByTestId("birthdate-option-day-19")).toBeNull();
+
+    await fireEvent.press(modal.getByTestId("birthdate-option-year-2024"));
+
+    expect(modal.getByTestId("birthdate-option-month-12")).toBeOnTheScreen();
+    expect(modal.getByTestId("birthdate-option-day-31")).toBeOnTheScreen();
+
+    await fireEvent.press(modal.getByRole("button", { name: "확인" }));
+
+    expect(onChange.mock.calls).toEqual([["2024-10-18"]]);
+    expect(screen.queryByTestId("birthdate-picker-modal")).toBeNull();
+  });
+
+  it("U-32 Android 선택 창은 앱 언어를 따른다: 언어가 영어면 열 이름이 'Select year'·'Select month'·'Select day', 항목이 '2026'·'October'·'18', 머리 버튼이 'Cancel'·'Done'이다", async () => {
+    jest.replaceProperty(Platform, "OS", "android");
+    await seedStorage({ [STORAGE_KEYS.locale]: "en" });
+    await renderWithProviders(
+      <BirthdatePicker value={null} onChange={jest.fn()} range={RANGE} />
+    );
+
+    await fireEvent.press(
+      await screen.findByRole("button", {
+        name: "Date of birth, Select date of birth",
+      })
+    );
+    const modal = within(screen.getByTestId("birthdate-picker-modal"));
+    expect(columnLabels(modal)).toEqual([
+      "Select year",
+      "Select month",
+      "Select day",
+    ]);
+    expectChecked(modal, ["2026", "October", "18"]);
+    expect(modal.getByRole("radio", { name: "January" })).toBeOnTheScreen();
+    expect(modal.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
+    expect(modal.getByRole("button", { name: "Done" })).toBeOnTheScreen();
   });
 });
 
@@ -133,11 +238,10 @@ describe("R1-18 iOS 시트 하단 여백과 safe-area 하단 inset", () => {
   );
 });
 
-// R2-02 (리뷰 라운드 2): 웹 피커(BirthdatePicker.web)의 입력 원문 state(리뷰 R1-01). jest(iOS 프리셋)는 '@/components/home/BirthdatePicker'를
-// 네이티브 구현으로 풀므로 웹 구현은 경로에 .web을 붙여 직접 불러 검증한다(src/hooks/__test__/useRovingFocus.test.tsx와 같은 방식).
-// 호스트 <input>은 RN 렌더러에서 props를 가진 host 요소라 change 이벤트를 onChange에 직접 넘긴다(브라우저 값 = event.currentTarget.value).
-// 실제 Chromium 키보드 입력은 e2e/review-r1-home.spec.ts(R1-01)가 본다. 그 E2E는 date.ts의 0~99년 보정만으로도 통과하므로
-// (리뷰 R2-02) 피커가 원문을 지키는 동작과 상위 값 변경 반영(changedByParent)은 여기서 지킨다.
+// R2-02 (리뷰 라운드 2) → v1.8 U-32: 웹 피커(BirthdatePicker.web)는 연·월·일 <select> 3개다. jest(iOS 프리셋)는
+// '@/components/home/BirthdatePicker'를 네이티브 구현으로 풀므로 웹 구현은 경로에 .web을 붙여 직접 불러 검증한다
+// (src/hooks/__test__/useRovingFocus.test.tsx와 같은 방식). 호스트 <select>는 RN 렌더러에서 props를 가진 host 요소라
+// change 이벤트를 onChange에 직접 넘긴다(브라우저 값 = event.currentTarget.value). 실제 Chromium 선택은 E2E가 본다.
 
 /** 홈 HomeForm처럼 피커가 올린 값을 상위 state로 들고 다시 value로 내려 준다 */
 function WebPickerHarness({
@@ -160,32 +264,76 @@ function WebPickerHarness({
   );
 }
 
-/** 웹 피커의 host <input>(접근 이름 = home.birthdateLabel "생년월일") */
-async function findDateInput() {
-  return screen.findByLabelText("생년월일");
+/** 웹 피커의 연·월·일 select(접근 이름 = home.selectYear 등) */
+async function findSelects(
+  names: readonly [string, string, string] = ["연도 선택", "월 선택", "일 선택"]
+): Promise<[HostElement, HostElement, HostElement]> {
+  return [
+    await screen.findByLabelText(names[0]),
+    await screen.findByLabelText(names[1]),
+    await screen.findByLabelText(names[2]),
+  ];
 }
 
-/** 날짜 입력의 change 이벤트. 브라우저는 미완성이면 "", 그 밖에는 검증 전 원문을 준다 */
-function changeEvent(value: string) {
-  return { currentTarget: { value } };
+/** select가 보여 주는 값 세 개(연·월·일). 고르지 않은 칸은 "" */
+function selectedValues(selects: readonly HostElement[]): string[] {
+  return selects.map((select) => String(propsOf(select).value));
 }
 
-describe("R2-02 웹 피커(BirthdatePicker.web) 입력 원문 state", () => {
-  it("R2-02 유효한 날짜(2024-03-15)를 입력하면 그 IsoDate를 onChange로 올리고 입력란은 그 값을 보여 준다", async () => {
+/** select의 선택지 표기(option label, 첫 항목 = 고르지 않음 안내) */
+function optionLabels(select: HostElement): string[] {
+  return select.children.flatMap((option) =>
+    typeof option === "string" ? [] : [String(propsOf(option).label)]
+  );
+}
+
+/** select의 change 이벤트 */
+function changeEvent(value: string | number) {
+  return { currentTarget: { value: String(value) } };
+}
+
+describe("U-32 웹 피커(BirthdatePicker.web) 연·월·일 선택 상자", () => {
+  it("U-32 그룹 이름은 '생년월일'이고, 선택값 없이 열면 세 칸이 비어 있고 연도는 2026년~2017년 10개(첫 항목 '연도 선택')다. 연·월만 고르면 null, 일까지 고르면 그 IsoDate(2024-03-15)를 onChange로 올린다", async () => {
     const onChange = jest.fn();
     await renderWithProviders(
       <WebPickerHarness initial={null} onChange={onChange} />
     );
-    const input = await findDateInput();
-    expect(input).toHaveProp("value", "");
+    expect(await screen.findByLabelText("생년월일")).toHaveProp(
+      "role",
+      "group"
+    );
+    const [year, month, dayOfMonth] = await findSelects();
+    expect(selectedValues([year, month, dayOfMonth])).toEqual(["", "", ""]);
+    expect(optionLabels(year)).toEqual([
+      "연도 선택",
+      "2026년",
+      "2025년",
+      "2024년",
+      "2023년",
+      "2022년",
+      "2021년",
+      "2020년",
+      "2019년",
+      "2018년",
+      "2017년",
+    ]);
 
-    await fireEvent(input, "change", changeEvent("2024-03-15"));
+    await fireEvent(year, "change", changeEvent(2024));
+    await fireEvent(month, "change", changeEvent(3));
 
-    expect(onChange.mock.calls).toEqual([["2024-03-15"]]);
-    expect(input).toHaveProp("value", "2024-03-15");
+    expect(onChange.mock.calls).toEqual([[null], [null]]);
+
+    await fireEvent(dayOfMonth, "change", changeEvent(15));
+
+    expect(onChange).toHaveBeenLastCalledWith("2024-03-15");
+    expect(selectedValues([year, month, dayOfMonth])).toEqual([
+      "2024",
+      "3",
+      "15",
+    ]);
   });
 
-  it("R2-02 검증기가 거부하는 원문(연도 다섯 자리 20245-03-15)과 미완성 값('')은 null을 올리지만 입력란은 원문을 그대로 두고, 이어서 유효한 날짜가 되면 그 값을 올린다(상위 값 null로 덮어써 지우지 않음, R1-01)", async () => {
+  it("U-32 한 칸을 바꾸면 나머지 칸을 범위 안으로 맞춘다: 2024-01-31에서 2월 → 2024-02-29, 2026년 → 2026-02-28, 12월은 2026년에 없어 선택지가 10월까지다. 연도를 고르지 않음('')으로 되돌리면 null을 올리고 월·일 칸은 그대로 둔다", async () => {
     const onChange = jest.fn();
     await renderWithProviders(
       <WebPickerHarness
@@ -193,27 +341,31 @@ describe("R2-02 웹 피커(BirthdatePicker.web) 입력 원문 state", () => {
         onChange={onChange}
       />
     );
-    const input = await findDateInput();
-    expect(input).toHaveProp("value", "2024-01-31");
+    const [year, month, dayOfMonth] = await findSelects();
+    expect(selectedValues([year, month, dayOfMonth])).toEqual([
+      "2024",
+      "1",
+      "31",
+    ]);
+    expect(optionLabels(month)).toHaveLength(13);
 
-    await fireEvent(input, "change", changeEvent("20245-03-15"));
+    await fireEvent(month, "change", changeEvent(2));
+
+    expect(onChange).toHaveBeenLastCalledWith("2024-02-29");
+
+    await fireEvent(year, "change", changeEvent(2026));
+
+    expect(onChange).toHaveBeenLastCalledWith("2026-02-28");
+    expect(optionLabels(month).at(-1)).toBe("10월");
+
+    await fireEvent(year, "change", changeEvent(""));
 
     expect(onChange).toHaveBeenLastCalledWith(null);
-    expect(input).toHaveProp("value", "20245-03-15");
-
-    await fireEvent(input, "change", changeEvent(""));
-
-    expect(onChange).toHaveBeenLastCalledWith(null);
-    expect(input).toHaveProp("value", "");
-
-    await fireEvent(input, "change", changeEvent("2025-03-15"));
-
-    expect(onChange).toHaveBeenLastCalledWith("2025-03-15");
-    expect(input).toHaveProp("value", "2025-03-15");
+    expect(selectedValues([year, month, dayOfMonth])).toEqual(["", "2", "28"]);
     expect(onChange).toHaveBeenCalledTimes(3);
   });
 
-  it("R2-02 상위가 value를 바꾸면(프리필·초기화) 입력란이 새 값을 보여 주고 onChange는 부르지 않는다(changedByParent: 다른 날짜 → 그 날짜, null → 빈 입력)", async () => {
+  it("R2-02 상위가 value를 바꾸면(프리필·초기화) 칸이 새 값을 보여 주고 onChange는 부르지 않는다(changedByParent: 다른 날짜 → 그 날짜, null → 빈 칸)", async () => {
     const onChange = jest.fn();
     // 렌더마다 상위 제어 값(value)만 바뀐다
     const webPicker = (value: IsoDate | null) => (
@@ -222,16 +374,33 @@ describe("R2-02 웹 피커(BirthdatePicker.web) 입력 원문 state", () => {
     const { rerender } = await renderWithProviders(
       webPicker(toIsoDate(day("2024-01-31")))
     );
-    const input = await findDateInput();
-    expect(input).toHaveProp("value", "2024-01-31");
+    const selects = await findSelects();
+    expect(selectedValues(selects)).toEqual(["2024", "1", "31"]);
 
     await rerender(webPicker(toIsoDate(day("2025-05-05"))));
 
-    expect(input).toHaveProp("value", "2025-05-05");
+    expect(selectedValues(selects)).toEqual(["2025", "5", "5"]);
 
     await rerender(webPicker(null));
 
-    expect(input).toHaveProp("value", "");
+    expect(selectedValues(selects)).toEqual(["", "", ""]);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("U-32 선택지와 이름은 앱 언어를 따른다: 영어면 칸 이름 'Select year'·'Select month'·'Select day', 월은 'January'~'December', 그룹 lang은 'en-US'다", async () => {
+    await seedStorage({ [STORAGE_KEYS.locale]: "en" });
+    await renderWithProviders(
+      <WebPickerHarness initial={null} onChange={jest.fn()} />
+    );
+    const [year, month, dayOfMonth] = await findSelects([
+      "Select year",
+      "Select month",
+      "Select day",
+    ]);
+    expect(optionLabels(year).slice(0, 2)).toEqual(["Select year", "2026"]);
+    expect(optionLabels(month).slice(1, 3)).toEqual(["January", "February"]);
+    expect(optionLabels(month).at(-1)).toBe("December");
+    expect(optionLabels(dayOfMonth).at(-1)).toBe("31");
+    expect(screen.getByLabelText("Date of birth")).toHaveProp("lang", "en-US");
   });
 });

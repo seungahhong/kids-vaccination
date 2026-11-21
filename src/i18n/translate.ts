@@ -25,3 +25,17 @@ export function translate(locale: Locale, key: TranslationKey): string {
 export function localize(text: LocalizedText, locale: Locale): string {
   return text[locale];
 }
+
+/**
+ * 번역 문구의 {이름} 자리표시자를 값으로 바꾼다(FR-16: "{name} 삭제", "{count}/{max}" 등).
+ * 값이 없는 자리표시자는 그대로 둔다. 언어마다 어순이 달라 문자열을 이어 붙이지 않고 문구 안에 자리를 둔다
+ */
+export function formatMessage(
+  template: string,
+  values: Readonly<Record<string, string | number>>
+): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => {
+    const value = values[key];
+    return value === undefined ? match : String(value);
+  });
+}

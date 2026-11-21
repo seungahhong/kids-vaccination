@@ -11,12 +11,23 @@ export type LocaleOption = {
   readonly nativeName: string;
 };
 
-export const LOCALE_OPTIONS: readonly LocaleOption[] = [
-  { code: "ko", flag: "🇰🇷", nativeName: "한국어" },
-  { code: "en", flag: "🇺🇸", nativeName: "English" },
-  { code: "ja", flag: "🇯🇵", nativeName: "日本語" },
-  { code: "zh", flag: "🇨🇳", nativeName: "中文" },
-];
+/** 로케일별 옵션. 키 누락·초과는 컴파일 오류다(satisfies) */
+const OPTION_BY_LOCALE = {
+  ko: { code: "ko", flag: "🇰🇷", nativeName: "한국어" },
+  en: { code: "en", flag: "🇺🇸", nativeName: "English" },
+  ja: { code: "ja", flag: "🇯🇵", nativeName: "日本語" },
+  zh: { code: "zh", flag: "🇨🇳", nativeName: "中文" },
+} as const satisfies Readonly<Record<Locale, LocaleOption>>;
+
+/** 화면 순서(LOCALES)의 언어 옵션 */
+export const LOCALE_OPTIONS: readonly LocaleOption[] = LOCALES.map(
+  (code) => OPTION_BY_LOCALE[code]
+);
+
+/** 로케일의 옵션(국기·자국어명). 헤더 언어 버튼의 접근 이름이 쓴다(FR-15) */
+export function localeOptionOf(locale: Locale): LocaleOption {
+  return OPTION_BY_LOCALE[locale];
+}
 
 /** expo-localization Locale의 부분 집합(languageCode만 사용, P-04) */
 export type DeviceLocaleLike = { readonly languageCode: string | null };
